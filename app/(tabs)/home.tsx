@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { router } from "expo-router";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import { Card } from "@/src/components/ui/card";
 import { Chip } from "@/src/components/ui/chip";
@@ -23,21 +24,51 @@ import {
 
 export default function HomeRoute() {
   const data = usePsmfStore((store) => store.data);
+  const clearStore = usePsmfStore((store) => store.clearStore);
   const { today } = useToday();
   const onboarded = selectIsOnboarded(data);
+  const [isResetting, setIsResetting] = useState(false);
+
+  function handleResetPress() {
+    if (isResetting) {
+      return;
+    }
+
+    Alert.alert(
+      "Reset aplikacije",
+      "Ovo brise samo lokalne podatke ove aplikacije i vraca te na onboarding. Expo Go ostaje netaknut.",
+      [
+        { text: "Otkazi", style: "cancel" },
+        {
+          text: "Resetuj",
+          style: "destructive",
+          onPress: () => {
+            setIsResetting(true);
+            void clearStore()
+              .then(() => {
+                router.replace("/onboarding/welcome");
+              })
+              .finally(() => {
+                setIsResetting(false);
+              });
+          },
+        },
+      ],
+    );
+  }
 
   if (!onboarded) {
     return (
       <Screen>
         <SectionHeader
-          description="Početni routing već radi, ali onboarding još nije završen."
+          description="Pocetni routing vec radi, ali onboarding jos nije zavrsen."
           eyebrow="Danas"
-          title="Završi onboarding"
+          title="Zavrsi onboarding"
         />
         <EmptyState
           badge="Prvi launch"
-          description="Faza 1 postavlja store, navigaciju i placeholder rute. Sledeća faza uvodi pravi onboarding state i finalno čuvanje podataka."
-          title="Još nema aktivnog plana"
+          description="Faza 1 postavlja store, navigaciju i placeholder rute. Sledeca faza uvodi pravi onboarding state i finalno cuvanje podataka."
+          title="Jos nema aktivnog plana"
         />
         <PrimaryButton
           label="Idi na onboarding"
@@ -60,9 +91,9 @@ export default function HomeRoute() {
       <View className="gap-4">
         <Chip label="Phase 1 shell" variant="warning" />
         <SectionHeader
-          description="Dashboard sada čita stvarni Zustand store i hydration stanje. Faze 4-7 će zameniti placeholder kartice finalnim iskustvom."
-          eyebrow={`Danas • ${today}`}
-          title={`Zdravo, ${data.userName ?? "korisniče"}`}
+          description="Dashboard sada cita stvarni Zustand store i hydration stanje. Faze 4-7 ce zameniti placeholder kartice finalnim iskustvom."
+          eyebrow={`Danas - ${today}`}
+          title={`Zdravo, ${data.userName ?? "korisnice"}`}
         />
       </View>
 
@@ -98,16 +129,33 @@ export default function HomeRoute() {
           value={`${estimatedCalories}`}
         />
         <StatTile
-          label="Trenutna težina"
-          subtitle="Biće povezana sa weight entry tokom faze 5"
-          value={currentWeight !== null ? `${currentWeight} kg` : "—"}
+          label="Trenutna tezina"
+          subtitle="Bice povezana sa weight entry tokom faze 5"
+          value={currentWeight !== null ? `${currentWeight} kg` : "-"}
         />
         <StatTile
           label="Voda"
-          subtitle="Daily tracker stiže u fazi 7"
-          value={`${waterGlasses} čaša`}
+          subtitle="Daily tracker stize u fazi 7"
+          value={`${waterGlasses} casa`}
         />
       </View>
+
+      {__DEV__ ? (
+        <Card className="gap-3 border-warning/30 bg-warning/10">
+          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
+            Debug
+          </Text>
+          <Text className="text-sm leading-6 text-muted">
+            Reset brise samo projektni store i vraca te na onboarding radi testiranja.
+          </Text>
+          <PrimaryButton
+            disabled={isResetting}
+            label={isResetting ? "Resetujem..." : "Reset onboarding"}
+            onPress={handleResetPress}
+            variant="secondary"
+          />
+        </Card>
+      ) : null}
     </Screen>
   );
 }

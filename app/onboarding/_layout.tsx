@@ -1,6 +1,16 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 
-export default function OnboardingLayout() {
+import { OnboardingWizardProvider } from "@/src/hooks/use-onboarding-wizard";
+import { usePsmfStore } from "@/src/store/psmf-store";
+import { selectIsOnboarded } from "@/src/store/selectors";
+
+function OnboardingStack() {
+  const data = usePsmfStore((store) => store.data);
+
+  if (selectIsOnboarded(data)) {
+    return <Redirect href="/(tabs)/home" />;
+  }
+
   return (
     <Stack
       screenOptions={{
@@ -9,5 +19,13 @@ export default function OnboardingLayout() {
         headerShown: false,
       }}
     />
+  );
+}
+
+export default function OnboardingLayout() {
+  return (
+    <OnboardingWizardProvider>
+      <OnboardingStack />
+    </OnboardingWizardProvider>
   );
 }

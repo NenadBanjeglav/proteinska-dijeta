@@ -19,7 +19,8 @@ export function Toggle<T extends string>({
   onChange,
 }: ToggleProps<T>) {
   return (
-    <View className="flex-row rounded-2xl bg-surface-soft p-1">
+    <View className="max-w-[320px] self-center rounded-2xl bg-surface-soft p-1">
+      <View className="flex-row">
       {options.map((option) => {
         const active = option.value === value;
 
@@ -34,7 +35,7 @@ export function Toggle<T extends string>({
           >
             <Text
               className={cn(
-                "text-center text-sm font-semibold",
+                "text-center text-sm font-bold",
                 active ? "text-text" : "text-muted",
               )}
             >
@@ -43,6 +44,7 @@ export function Toggle<T extends string>({
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }

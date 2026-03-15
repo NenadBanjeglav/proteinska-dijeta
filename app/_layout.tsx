@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { Text, View } from "react-native";
+import { Text } from "react-native";
 
 import { APP_NAME } from "@/src/constants/copy";
 import { Card } from "@/src/components/ui/card";

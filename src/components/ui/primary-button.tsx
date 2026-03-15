@@ -32,8 +32,8 @@ export function PrimaryButton({
           start={{ x: 0, y: 0.5 }}
           style={{
             opacity: isInactive ? 0.5 : 1,
-            borderRadius: 22,
-            minHeight: 60,
+            borderRadius: 20,
+            minHeight: 62,
             justifyContent: "center",
             alignItems: "center",
             paddingHorizontal: 24,
@@ -42,7 +42,7 @@ export function PrimaryButton({
           {loading ? (
             <ActivityIndicator color={colors.text} />
           ) : (
-            <Text className="text-base font-bold text-text">{label}</Text>
+            <Text className="text-[17px] font-extrabold text-text">{label}</Text>
           )}
         </LinearGradient>
       ) : (
