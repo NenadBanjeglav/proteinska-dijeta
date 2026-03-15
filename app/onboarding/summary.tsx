@@ -22,12 +22,12 @@ export default function SummaryRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Ovo je finalni payload koji se upisuje u Zustand i AsyncStorage jednim potvrdom."
+      description="Plan je spreman. Proveri brojke i potvrdi da bismo sacuvali tvoj pocetak."
       onPrimaryPress={() => {
         void confirm();
       }}
       primaryDisabled={!preview}
-      primaryLabel="Pocni PSMF Danas"
+      primaryLabel="Pocni PSMF danas"
       primaryLoading={isSubmitting}
       onBackPress={goBack}
       progressLabel="Gotovo!"
@@ -101,8 +101,8 @@ export default function SummaryRoute() {
           </Card>
 
           <InfoCallout
-            description="Finalna potvrda sada upisuje startDate, cilj proteina, kategoriju i sve onboarding podatke u lokalni store."
-            title="Sta se desava na potvrdu"
+            description="Potvrdom cuvamo tvoj pocetni plan lokalno na telefonu, pa pri sledecem otvaranju nastavljas tamo gde si stao."
+            title="Posle potvrde"
           />
         </>
       ) : (

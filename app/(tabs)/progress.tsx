@@ -68,7 +68,7 @@ export default function ProgressRoute() {
       <Screen>
         <EmptyState
           badge="Ceka onboarding"
-          description="Napredak se otkljucava cim onboarding upise pocetnu tezinu i plan u lokalni store."
+          description="Cim zavrsis onboarding i sacuvas pocetnu tezinu, ovde ces videti trend, istoriju i tempo napretka."
           title="Jos nema podataka za trend"
         />
       </Screen>

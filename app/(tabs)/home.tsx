@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { Alert, Text, View } from "react-native";
+import { Alert, View } from "react-native";
 
 import { DashboardHeader } from "@/src/components/dashboard/dashboard-header";
 import { MealBuilderSheet } from "@/src/components/dashboard/meal-builder-sheet";
@@ -9,7 +9,6 @@ import { ProgressMetricCard } from "@/src/components/dashboard/progress-metric-c
 import { WaterTrackerCard } from "@/src/components/dashboard/water-tracker-card";
 import { WeightEntryCard } from "@/src/components/dashboard/weight-entry-card";
 import { WeightEntrySheet } from "@/src/components/dashboard/weight-entry-sheet";
-import { Card } from "@/src/components/ui/card";
 import { EmptyState } from "@/src/components/ui/empty-state";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
 import { Screen } from "@/src/components/ui/screen";
@@ -42,58 +41,28 @@ function showAlert(title: string, message: string) {
 
 export default function HomeRoute() {
   const data = usePsmfStore((store) => store.data);
-  const clearStore = usePsmfStore((store) => store.clearStore);
   const saveWeightEntry = usePsmfStore((store) => store.saveWeightEntry);
   const saveMeal = usePsmfStore((store) => store.saveMeal);
   const deleteMeal = usePsmfStore((store) => store.deleteMeal);
   const setWaterGlasses = usePsmfStore((store) => store.setWaterGlasses);
   const { today } = useToday();
   const onboarded = selectIsOnboarded(data);
-  const [isResetting, setIsResetting] = useState(false);
   const [weightSheetOpen, setWeightSheetOpen] = useState(false);
   const [mealSheetOpen, setMealSheetOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<LoggedMeal | null>(null);
-
-  function handleResetPress() {
-    if (isResetting) {
-      return;
-    }
-
-    Alert.alert(
-      "Reset aplikacije",
-      "Ovo brise samo lokalne podatke ove aplikacije i vraca te na onboarding. Expo Go ostaje netaknut.",
-      [
-        { text: "Otkazi", style: "cancel" },
-        {
-          text: "Resetuj",
-          style: "destructive",
-          onPress: () => {
-            setIsResetting(true);
-            void clearStore()
-              .then(() => {
-                router.replace("/onboarding/welcome");
-              })
-              .finally(() => {
-                setIsResetting(false);
-              });
-          },
-        },
-      ],
-    );
-  }
 
   if (!onboarded) {
     return (
       <Screen>
         <SectionHeader
-          description="Pocetni routing vec radi, ali onboarding jos nije zavrsen."
+          description="Zavrsi nekoliko kratkih koraka da bismo izracunali tvoj dnevni cilj proteina."
           eyebrow="Danas"
           title="Zavrsi onboarding"
         />
         <EmptyState
-          badge="Prvi launch"
-          description="Faza 1 postavlja store, navigaciju i placeholder rute. Sledeca faza uvodi pravi onboarding state i finalno cuvanje podataka."
-          title="Jos nema aktivnog plana"
+          badge="Pocetak"
+          description="Cim potvrdis onboarding, ovde ces videti danasnje proteine, obroke, vodu i jutarnju tezinu."
+          title="Jos nemas aktivan plan"
         />
         <PrimaryButton
           label="Idi na onboarding"
@@ -249,23 +218,6 @@ export default function HomeRoute() {
         onSave={handleSaveMeal}
         open={mealSheetOpen}
       />
-
-      {__DEV__ ? (
-        <Card className="gap-3 border-warning/30 bg-warning/10">
-          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
-            Debug
-          </Text>
-          <Text className="text-sm leading-6 text-muted">
-            Reset brise samo projektni store i vraca te na onboarding radi testiranja.
-          </Text>
-          <PrimaryButton
-            disabled={isResetting}
-            label={isResetting ? "Resetujem..." : "Reset onboarding"}
-            onPress={handleResetPress}
-            variant="secondary"
-          />
-        </Card>
-      ) : null}
     </Screen>
   );
 }
