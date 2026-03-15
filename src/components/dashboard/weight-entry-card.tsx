@@ -1,6 +1,6 @@
-import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, Text, View } from "react-native";
 
-import { ActionPill } from "@/src/components/dashboard/action-pill";
 import { Card } from "@/src/components/ui/card";
 import {
   formatWeightKg,
@@ -20,16 +20,17 @@ export function WeightEntryCard({
   onPress,
 }: WeightEntryCardProps) {
   const deltaTone = getWeightDeltaTone(deltaKg);
+  const ctaLabel = todayWeightKg === null ? "Unesi danasnju tezinu" : "Izmeni danasnju tezinu";
 
   return (
     <Card className="flex-row items-center justify-between gap-4 px-4 py-4">
-      <View className="flex-row items-center gap-4">
+      <View className="min-w-0 flex-1 flex-row items-center gap-4">
         <View className="h-12 w-12 items-center justify-center rounded-2xl bg-[#19335E]">
           <Text className="text-lg font-black text-[#6EA8FF]">KG</Text>
         </View>
 
-        <View className="gap-1">
-          <Text className="text-xl font-bold text-text">
+        <View className="min-w-0 flex-1 gap-1">
+          <Text className="text-xl font-bold text-text" numberOfLines={2}>
             {todayWeightKg === null ? "Unesi danasnju tezinu" : "Danasnja tezina"}
           </Text>
           <Text
@@ -55,11 +56,17 @@ export function WeightEntryCard({
             {formatWeightKg(todayWeightKg)}
           </Text>
         ) : null}
-        <ActionPill
-          label={todayWeightKg === null ? "+ Unesi" : "Izmeni"}
+        <Pressable
+          accessibilityLabel={ctaLabel}
+          className="h-12 w-12 items-center justify-center rounded-2xl bg-accent"
           onPress={onPress}
-          variant="accent"
-        />
+        >
+          <Ionicons
+            color="#FFFFFF"
+            name={todayWeightKg === null ? "add" : "pencil"}
+            size={20}
+          />
+        </Pressable>
       </View>
     </Card>
   );

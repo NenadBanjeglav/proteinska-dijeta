@@ -23,7 +23,7 @@ export default function NameRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Koristimo tvoje ime za pozdrav i licni ton kroz ceo protokol."
+      description="Ime koristimo za pozdrav i malo licniji ton kroz aplikaciju."
       onPrimaryPress={() => {
         commitStep({ userName: trimmedName });
       }}
@@ -50,7 +50,7 @@ export default function NameRoute() {
 
       {isNameValid(draftName) ? (
         <InfoCallout
-          description="Hajde da ti napravimo plan koji prati tvoj ritam i cilj."
+          description="Hajde da slozimo plan koji odgovara tvom cilju i ritmu."
           title={`Zdravo, ${trimmedName}.`}
           tone="warning"
         />

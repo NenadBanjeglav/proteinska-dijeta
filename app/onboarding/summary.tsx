@@ -7,6 +7,11 @@ import { Card } from "@/src/components/ui/card";
 import { Chip } from "@/src/components/ui/chip";
 import { SUPPLEMENT_GUIDANCE } from "@/src/constants/protocol";
 import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
+import {
+  formatProteinMultiplierLabel,
+  formatProteinRangeLabel,
+  isProteinRangeFixed,
+} from "@/src/lib/onboarding";
 
 export default function SummaryRoute() {
   const { state, syncStep, preview, confirm, goBack, isSubmitting } =
@@ -16,20 +21,22 @@ export default function SummaryRoute() {
     syncStep(8);
   }, [syncStep]);
 
-  const rangeLabel = preview
-    ? `${preview.proteinRange[0]}-${preview.proteinRange[1]} g/lb`
+  const rangeLabel = preview ? formatProteinRangeLabel(preview.proteinRange) : null;
+  const multiplierLabel = preview
+    ? formatProteinMultiplierLabel(preview.proteinMultiplier)
     : null;
+  const hasFixedRange = preview ? isProteinRangeFixed(preview.proteinRange) : false;
 
   return (
     <OnboardingStepScreen
-      description="Plan je spreman. Proveri brojke i potvrdi da bismo sacuvali tvoj pocetak."
+      description="Plan je spreman. Pregledaj brojke i potvrdi pocetak."
       onPrimaryPress={() => {
         void confirm();
       }}
+      onBackPress={goBack}
       primaryDisabled={!preview}
       primaryLabel="Pocni PSMF danas"
       primaryLoading={isSubmitting}
-      onBackPress={goBack}
       progressLabel="Gotovo!"
       scroll
       showBack={false}
@@ -38,12 +45,6 @@ export default function SummaryRoute() {
     >
       {preview ? (
         <>
-          <View className="items-center pb-1 pt-2">
-            <View className="h-20 w-20 items-center justify-center rounded-full bg-success/15">
-              <Text className="text-4xl font-black text-success">OK</Text>
-            </View>
-          </View>
-
           <Card className="gap-3 border-warning bg-surface-strong">
             <View className="flex-row items-start justify-between gap-4">
               <View className="flex-1 gap-1">
@@ -57,15 +58,17 @@ export default function SummaryRoute() {
               <Chip label={`Kategorija ${preview.category}`} variant="accent" />
             </View>
             <Text className="text-base leading-6 text-muted-strong">
-              Oko {preview.estimatedCalories} kcal dnevno - LBM{" "}
+              Oko {preview.estimatedCalories} kcal dnevno - nemasna masa{" "}
               {preview.leanBodyMassKg} kg / {preview.leanBodyMassLbs} lb
             </Text>
             <Text className="text-sm leading-6 text-muted-strong">
-              Multiplikator {preview.proteinMultiplier} - raspon {rangeLabel}
+              {hasFixedRange
+                ? `Fiksni multiplikator ${multiplierLabel}`
+                : `Tvoj multiplikator je ${multiplierLabel}, a preporuceni raspon ${rangeLabel}`}
             </Text>
             {state.bodyFatMode === "bmi" && preview.bmi !== null ? (
               <InfoCallout
-                description={`BMI fallback je koriscen (BMI ${preview.bmi}). Ako si misicav ili atletski gradjen, manualni % masti je bolji izbor.`}
+                description={`Koriscena je BMI procena (BMI ${preview.bmi}). Ako si misicav ili atletski gradjen, bolji izbor je rucni unos procenta masti.`}
                 tone="warning"
               />
             ) : null}
@@ -101,7 +104,7 @@ export default function SummaryRoute() {
           </Card>
 
           <InfoCallout
-            description="Potvrdom cuvamo tvoj pocetni plan lokalno na telefonu, pa pri sledecem otvaranju nastavljas tamo gde si stao."
+            description="Kada potvrdis, plan se cuva lokalno na telefonu. Sledeci put nastavljas odatle."
             title="Posle potvrde"
           />
         </>

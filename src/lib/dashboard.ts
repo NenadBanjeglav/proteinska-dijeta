@@ -45,7 +45,7 @@ export function getRemainingLabel(remainingDays: number | null) {
 
 export function getMealsSummary(mealCount: number, proteinConsumed: number) {
   const mealLabel = mealCount === 1 ? "obrok" : "obroka";
-  return `${mealCount} ${mealLabel} - ${proteinConsumed}g proteina ukupno`;
+  return `${mealCount} ${mealLabel} - ukupno ${proteinConsumed} g proteina`;
 }
 
 export function getWeightDelta(
@@ -69,7 +69,7 @@ export function getWeightDeltaTone(deltaKg: number | null): WeightDeltaTone {
 
 export function getWeightDeltaLabel(deltaKg: number | null) {
   if (deltaKg === null) {
-    return "Prvi unos za poredjenje";
+    return "Prvi unos - jos nema poredjenja";
   }
 
   if (deltaKg === 0) {
@@ -82,18 +82,18 @@ export function getWeightDeltaLabel(deltaKg: number | null) {
 
 export function getWeightDeltaMessage(deltaKg: number | null) {
   if (deltaKg === null) {
-    return "Prvi unos je tvoj novi referentni trenutak. Posle toga poredimo dan po dan.";
+    return "Ovo je prvi unos. Vec od sutra imaces poredjenje sa prethodnim danom.";
   }
 
   if (deltaKg === 0) {
-    return "Bez promene danas. Bitna je konzistentnost, ne jedan broj.";
+    return "Danas nema promene. Vazniji je trend kroz vise dana nego jedan broj.";
   }
 
   if (deltaKg < 0) {
-    return "Pad je dobar signal. Nastavi po planu i ne juri jos veci minus po svaku cenu.";
+    return "Pad je dobar signal. Nastavi po planu i ne pokusavaj da na silu ubrzas minus.";
   }
 
-  return "Kratkorocan skok je normalan. Voda, so i digestivni sadrzaj cesto objasne vecinu razlike.";
+  return "Kratkorocan skok je normalan. Voda, so i varenje cesto objasne veci deo razlike.";
 }
 
 export function formatWeightKg(weightKg: number) {

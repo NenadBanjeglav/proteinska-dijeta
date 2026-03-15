@@ -18,6 +18,7 @@ type OnboardingStepScreenProps = PropsWithChildren<{
   showBack?: boolean;
   onBackPress?: () => void;
   progressLabel?: string;
+  showHeader?: boolean;
 }>;
 
 export function OnboardingStepScreen({
@@ -34,6 +35,7 @@ export function OnboardingStepScreen({
   showBack = true,
   onBackPress,
   progressLabel,
+  showHeader = true,
 }: OnboardingStepScreenProps) {
   const progressStep = Math.max(0, step - 1);
 
@@ -44,21 +46,25 @@ export function OnboardingStepScreen({
         className="flex-1"
       >
         <View className="flex-1 bg-background px-6 pt-3">
-          <StepHeader
-            description={description}
-            showProgress={showProgress}
-            showBack={showBack}
-            onBackPress={onBackPress}
-            progressLabel={progressLabel}
-            progressStep={progressStep}
-            title={title}
-            total={7}
-          />
+          {showHeader ? (
+            <StepHeader
+              description={description}
+              showProgress={showProgress}
+              showBack={showBack}
+              onBackPress={onBackPress}
+              progressLabel={progressLabel}
+              progressStep={progressStep}
+              title={title}
+              total={7}
+            />
+          ) : null}
 
           {scroll ? (
             <ScrollView
               className="flex-1"
-              contentContainerClassName="flex-grow gap-4 pb-8 pt-6"
+              contentContainerClassName={
+                showHeader ? "flex-grow gap-4 pb-8 pt-6" : "flex-grow gap-4 pb-8 pt-2"
+              }
               contentInsetAdjustmentBehavior="automatic"
               keyboardDismissMode="on-drag"
               keyboardShouldPersistTaps="handled"
@@ -66,7 +72,9 @@ export function OnboardingStepScreen({
               {children}
             </ScrollView>
           ) : (
-            <View className="flex-1 gap-4 pb-8 pt-6">{children}</View>
+            <View className={showHeader ? "flex-1 gap-4 pb-8 pt-6" : "flex-1 gap-4 pb-8 pt-2"}>
+              {children}
+            </View>
           )}
         </View>
 

@@ -19,31 +19,34 @@ export function Toggle<T extends string>({
   onChange,
 }: ToggleProps<T>) {
   return (
-    <View className="max-w-[320px] self-center rounded-2xl bg-surface-soft p-1">
-      <View className="flex-row">
-      {options.map((option) => {
-        const active = option.value === value;
+    <View className="w-full max-w-[340px] self-center overflow-hidden rounded-full border border-border bg-surface-soft p-1">
+      <View className="flex-row gap-1">
+        {options.map((option) => {
+          const active = option.value === value;
 
-        return (
-          <Pressable
-            key={option.value}
-            className={cn(
-              "flex-1 rounded-2xl px-4 py-3",
-              active ? "bg-accent" : "bg-transparent",
-            )}
-            onPress={() => onChange(option.value)}
-          >
-            <Text
+          return (
+            <Pressable
+              key={option.value}
               className={cn(
-                "text-center text-sm font-bold",
-                active ? "text-text" : "text-muted",
+                "min-h-[52px] flex-1 items-center justify-center rounded-full px-4",
+                active ? "bg-accent" : "bg-transparent",
               )}
+              onPress={() => onChange(option.value)}
             >
-              {option.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+              <Text
+                adjustsFontSizeToFit
+                className={cn(
+                  "text-center text-[13px] font-bold",
+                  active ? "text-text" : "text-muted-strong",
+                )}
+                minimumFontScale={0.85}
+                numberOfLines={1}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );

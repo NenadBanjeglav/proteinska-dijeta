@@ -20,7 +20,7 @@ export default function GenderRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Pol odredjuje pragove kategorija telesnih masti i kasnije PSMF kategoriju."
+      description="Pol odredjuje pragove telesne masti po kojima ulazis u PSMF kategoriju."
       onPrimaryPress={() => {
         commitStep({ gender: draftGender });
       }}
@@ -31,21 +31,21 @@ export default function GenderRoute() {
     >
       <SelectionCard
         description="Kat. 1 <= 15%, kat. 2 16-25%, kat. 3 26%+"
-        meta="Nizi pragovi za kategorije telesnih masti."
+        meta="Nizi pragovi za procenat telesne masti."
         onPress={() => setDraftGender("male")}
         selected={draftGender === "male"}
         title="Muski"
       />
       <SelectionCard
         description="Kat. 1 <= 24%, kat. 2 25-34%, kat. 3 35%+"
-        meta="Pragovi kategorija su visa nego kod muskaraca."
+        meta="Pragovi su visi nego kod muskaraca."
         onPress={() => setDraftGender("female")}
         selected={draftGender === "female"}
         title="Zenski"
       />
 
       <InfoCallout
-        description="Pol odredjuje pragove kategorija. Proteini se zatim racunaju prema kategoriji i nivou aktivnosti."
+        description="Na osnovu pola, procenta masti i aktivnosti racunamo tvoju kategoriju i dnevni cilj proteina."
         title="Napomena"
       />
     </OnboardingStepScreen>

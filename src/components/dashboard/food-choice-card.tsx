@@ -14,36 +14,36 @@ type FoodChoiceCardProps = {
 function getPriorityCopy(food: FoodItem) {
   if (food.priority === "tierA") {
     return {
-      badge: "Tier A",
+      badge: "Osnova",
       badgeWrapClassName: "bg-success/15",
       badgeTextClassName: "text-success",
-      note: "Najbolji default izbor za PSMF.",
+      note: "Najbolji izbor za svakodnevni PSMF obrok.",
     };
   }
 
   if (food.priority === "tierB") {
     return {
-      badge: "Tier B",
+      badge: "Dobra opcija",
       badgeWrapClassName: "bg-surface-soft",
       badgeTextClassName: "text-muted-strong",
-      note: "Dobra rotacija, ali nije glavni default.",
+      note: "Dobra zamena kada zelis malo vise raznovrsnosti.",
     };
   }
 
   if (food.priority === "limited") {
     return {
-      badge: "Limited",
+      badge: "Umereno",
       badgeWrapClassName: "bg-warning/15",
       badgeTextClassName: "text-warning",
-      note: "Koristi samo uz oprez i u manjim kolicinama.",
+      note: "Koristi redje i u manjim kolicinama.",
     };
   }
 
   return {
-    badge: "Condiment",
+    badge: "Dodatak",
     badgeWrapClassName: "bg-accent/15",
     badgeTextClassName: "text-warning",
-    note: "Podrska ukusu, ne glavna baza obroka.",
+    note: "Za ukus, ne kao glavna baza obroka.",
   };
 }
 
@@ -70,7 +70,7 @@ export function FoodChoiceCard({
           <View className="flex-1 gap-1">
             <Text className="text-base font-bold text-text">{food.label}</Text>
             <Text className="text-sm text-muted">
-              {food.proteinPer100g}g proteina / {food.caloriesPer100g} kcal na 100g
+              {food.proteinPer100g} g proteina / {food.caloriesPer100g} kcal na 100 g
             </Text>
           </View>
 

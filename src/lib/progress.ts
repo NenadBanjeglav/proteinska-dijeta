@@ -150,7 +150,7 @@ export function buildProgressMilestones(params: {
       id: "first-loss",
       badge: `-${formatWeightDeltaKg(params.totalLostKg)}`,
       title: "Prvi minus je tu",
-      description: "Skala ide nadole. Drzi isti ritam i ne juri veci minus po svaku cenu.",
+      description: "Vaga ide nadole. Nastavi istim ritmom i ne pokusavaj da na silu ubrzas rezultat.",
       tone: "success",
     });
   } else {
@@ -158,7 +158,7 @@ export function buildProgressMilestones(params: {
       id: "first-entry",
       badge: "Start",
       title: "Pocetna baza je sacuvana",
-      description: "Unesi jutarnju tezinu svakog dana da trend dobije smisao i da grafikon postane koristan.",
+      description: "Unosi jutarnju tezinu svakog dana da grafikon dobije smisao i da trend postane koristan.",
       tone: "default",
     });
   }
@@ -169,8 +169,8 @@ export function buildProgressMilestones(params: {
     title: "Ritam unosa",
     description:
       params.complianceDays >= Math.min(7, Math.max(1, params.elapsedDays))
-        ? "Dobar niz. Doslednost je ono sto daje signal, ne jedan izolovan broj."
-        : "Jos malo doslednosti i trend ce biti mnogo cistiji i laksi za citanje.",
+        ? "Dobar niz. Doslednost daje jasan signal, ne jedan izdvojen broj."
+        : "Jos malo doslednosti i trend ce biti cistiji i laksi za pracenje.",
     tone: params.complianceDays >= Math.min(7, Math.max(1, params.elapsedDays)) ? "accent" : "default",
   });
 
@@ -180,8 +180,8 @@ export function buildProgressMilestones(params: {
     title: params.progress >= 1 ? "Faza je kompletirana" : "Faza je u toku",
     description:
       params.progress >= 1
-        ? "Ceo plan je zavrsen. Sada proceni sledeci korak bez panicnih korekcija."
-        : "Prati ritam faze iz dana u dan. Voda i oscilacije ne menjaju smer ako je plan ispostovan.",
+        ? "Ceo plan je zavrsen. Sada mirno proceni sledeci korak, bez naglih korekcija."
+        : "Prati ritam faze iz dana u dan. Voda i dnevne oscilacije ne menjaju smer ako se plana drzis.",
     tone: params.progress >= 1 ? "success" : "accent",
   });
 

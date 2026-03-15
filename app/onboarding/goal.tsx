@@ -23,7 +23,7 @@ export default function GoalRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Trajanje plana se bira deterministicki prema razlogu zbog kog ulazis u PSMF."
+      description="Izbor cilja odredjuje koliko dugo traje tvoja pocetna PSMF faza."
       onPrimaryPress={() => {
         if (draftGoal) {
           commitStep({ goalType: draftGoal });
@@ -37,28 +37,28 @@ export default function GoalRoute() {
     >
       <SelectionCard
         badge="Preporuceno za pocetak"
-        description="Brz ulazak u disciplinu i motivacija pre standardnije dijete."
+        description="Kratak i jasan pocetak koji gradi ritam i motivaciju."
         meta={`${GOAL_DAYS.kickstart} dana`}
         onPress={() => setDraftGoal("kickstart")}
         selected={draftGoal === "kickstart"}
         title="Pokretanje dijete"
       />
       <SelectionCard
-        description="Kratko resetovanje kada se napredak zaustavi."
+        description="Kratak reset kada napredak uspori ili stane."
         meta={`${GOAL_DAYS.plateau} dana`}
         onPress={() => setDraftGoal("plateau")}
         selected={draftGoal === "plateau"}
         title="Probijanje platoa"
       />
       <SelectionCard
-        description="Maksimalan gubitak masti pre odmora, vencanja ili slicnog dogadjaja."
+        description="Fokusiran minus pred odmor, svadbu ili neki drugi konkretan dogadjaj."
         meta={`${GOAL_DAYS.event} dana`}
         onPress={() => setDraftGoal("event")}
         selected={draftGoal === "event"}
         title="Priprema za dogadjaj"
       />
       <SelectionCard
-        description="Duze drzanje protokola uz vise discipline i planiranih break-ova."
+        description="Duze pracenje protokola uz vise discipline i planiranih pauza."
         meta={`${GOAL_DAYS.full} dana`}
         onPress={() => setDraftGoal("full")}
         selected={draftGoal === "full"}
@@ -66,8 +66,8 @@ export default function GoalRoute() {
       />
 
       <InfoCallout
-        description="V1 cilj koristi ove izbore kao jasan razlog i trajanje protokola, ne kao komplikovan planner."
-        title="Ocekivanje"
+        description="Ovaj izbor nam sluzi da odredimo jasan razlog i trajanje pocetne faze. Ne pravimo komplikovan planer."
+        title="Sta ovaj izbor znaci"
       />
 
       {draftGoal ? (

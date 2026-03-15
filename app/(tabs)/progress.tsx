@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { router } from "expo-router";
 import { Text, View, useWindowDimensions } from "react-native";
 
 import { MilestoneCard } from "@/src/components/progress/milestone-card";
@@ -8,6 +9,7 @@ import { ProgressStatCard } from "@/src/components/progress/progress-stat-card";
 import { WeightChart } from "@/src/components/progress/weight-chart";
 import { Card } from "@/src/components/ui/card";
 import { EmptyState } from "@/src/components/ui/empty-state";
+import { HeaderActionButton } from "@/src/components/ui/header-action-button";
 import { Screen } from "@/src/components/ui/screen";
 import { useToday } from "@/src/hooks/use-today";
 import {
@@ -68,8 +70,8 @@ export default function ProgressRoute() {
       <Screen>
         <EmptyState
           badge="Ceka onboarding"
-          description="Cim zavrsis onboarding i sacuvas pocetnu tezinu, ovde ces videti trend, istoriju i tempo napretka."
-          title="Jos nema podataka za trend"
+          description="Kad zavrsis onboarding i sacuvas pocetnu tezinu, ovde ces videti trend, istoriju i tempo napretka."
+          title="Jos nema podataka za napredak"
         />
       </Screen>
     );
@@ -103,10 +105,12 @@ export default function ProgressRoute() {
           </Text>
         </View>
 
-        <View className="min-w-[94px] shrink-0 rounded-2xl border border-border bg-surface px-4 py-3">
-          <Text className="text-center text-sm font-semibold text-muted-strong">
-            Nedelja
-          </Text>
+        <View className="pt-1">
+          <HeaderActionButton
+            accessibilityLabel="Podesavanja"
+            icon="settings-outline"
+            onPress={() => router.push("../settings")}
+          />
         </View>
       </View>
 
@@ -132,7 +136,7 @@ export default function ProgressRoute() {
             <Text className="text-sm leading-6 text-muted">
               {entries.length
                 ? getEntriesHistoryLabel(entries.length)
-                : "Unesi jutarnju tezinu da trend krene da zivi."}
+                : "Unesi jutarnju tezinu da bismo prikazali smislen trend."}
             </Text>
           </View>
           <ProgressPeriodToggle onChange={setPeriod} value={period} />
@@ -171,15 +175,15 @@ export default function ProgressRoute() {
           compact={compact}
           label="Uskladjenost"
           style={{ width: statsCardWidth }}
-          subtitle="Dani sa jutarnjim unosom tezine"
+          subtitle="Dani sa unetom jutarnjom tezinom"
           tone="green"
           value={`${complianceDays}/${Math.max(1, elapsedDays)}`}
         />
         <ProgressStatCard
           compact={compact}
-          label="Ukupno unosa"
+          label="Broj unosa"
           style={{ width: statsCardWidth }}
-          subtitle={`${Math.round(complianceRate * 100)}% discipline u pracenju`}
+          subtitle={`${Math.round(complianceRate * 100)}% doslednosti u pracenju`}
           tone="purple"
           value={`${entries.length}`}
         />
@@ -198,8 +202,8 @@ export default function ProgressRoute() {
                 </Text>
                 <Text className="text-sm text-muted" numberOfLines={2}>
                   {entry.deltaKg === null
-                    ? "Prvi upis u istoriji"
-                    : `${entry.deltaKg > 0 ? "+" : ""}${entry.deltaKg} kg vs prethodni unos`}
+                    ? "Prvi unos u istoriji"
+                    : `${entry.deltaKg > 0 ? "+" : ""}${entry.deltaKg} kg u odnosu na prethodni unos`}
                 </Text>
               </View>
               <Text
@@ -213,15 +217,15 @@ export default function ProgressRoute() {
         ) : (
           <EmptyState
             badge="Prazna istorija"
-            description="Cim upises prvu jutarnju tezinu, ovde ces videti dnevni log i trend kroz vreme."
-            title="Jos nema logova tezine"
+            description="Kad uneses prvu jutarnju tezinu, ovde ces videti istoriju unosa i trend kroz vreme."
+            title="Jos nema istorije tezine"
           />
         )}
       </View>
 
       <View className="gap-3">
         <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
-          Milestones
+          Prekretnice
         </Text>
         {milestones.map((milestone) => (
           <MilestoneCard

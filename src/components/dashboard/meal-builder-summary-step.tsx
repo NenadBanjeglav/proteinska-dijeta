@@ -24,7 +24,7 @@ export function MealBuilderSummaryStep({
           </View>
         ))}
         <Text className="text-sm leading-6 text-muted">
-          Ovo je reminder korak. Suplementi se ovde ne loguju kao deo obroka.
+          Ovo je samo podsetnik. Suplemente ovde ne upisujemo kao deo obroka.
         </Text>
       </Card>
 
@@ -46,7 +46,7 @@ export function MealBuilderSummaryStep({
         ))}
         <View className="border-t border-border pt-3">
           <Text className="text-sm leading-6 text-muted">
-            Lean protein neka ostane baza. Tier A povrce koristi kao default, a condimente drzi laganim.
+            Protein neka ostane osnova obroka, povrce dodaj po potrebi, a dodatke koristi umereno.
           </Text>
         </View>
         <View className="flex-row items-end justify-between gap-3">

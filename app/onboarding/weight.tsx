@@ -55,7 +55,7 @@ export default function WeightRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Tezina je osnova za LBM racun, BMI fallback i finalni protein target."
+      description="Tezina nam sluzi za racunanje nemasne mase, BMI procene i dnevnog cilja proteina."
       onPrimaryPress={() => {
         if (weightKg !== null) {
           commitStep({
@@ -80,7 +80,7 @@ export default function WeightRoute() {
       />
 
       <NumericInputCard
-        helpText="Interno cuvamo tezinu u kilogramima, bez obzira na prikazanu jedinicu."
+        helpText="Tezinu cuvamo u kilogramima, bez obzira na to koju jedinicu trenutno gledas."
         label="Tvoja tezina"
         onChangeText={setDraftValue}
         placeholder={draftUnit === "kg" ? "84" : "185.2"}
@@ -91,7 +91,7 @@ export default function WeightRoute() {
       {isWeightValid(weightKg) ? (
         <Card className="items-center gap-2">
           <Text className="text-sm font-semibold uppercase tracking-[2px] text-muted">
-            Live konverzija
+            Prikaz u drugoj jedinici
           </Text>
           <Text className="text-xl font-bold text-text">
             {alternateValue} {alternateUnit}
@@ -100,7 +100,7 @@ export default function WeightRoute() {
       ) : null}
 
       <InfoCallout
-        description="Ako treniras sa tegovima, mozes imati vise misica. U sledecem koraku unosis procenat masti ili koristis BMI fallback."
+        description="Ako treniras sa tegovima, moguce je da imas vise misica nego sto vaga sugerise. U sledecem koraku unosis procenat masti ili biras BMI procenu."
         title="Napomena"
       />
     </OnboardingStepScreen>

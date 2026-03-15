@@ -57,25 +57,25 @@ export function MealFoodPicker({
         foods={tierAFoods}
         onSelect={onSelect}
         selectedFoodIds={selectedFoodIds}
-        title="Tier A"
+        title="Osnovni izbor"
       />
       <FoodSection
         foods={tierBFoods}
         onSelect={onSelect}
         selectedFoodIds={selectedFoodIds}
-        title="Tier B"
+        title="Dobra alternativa"
       />
       <FoodSection
         foods={limitedFoods}
         onSelect={onSelect}
         selectedFoodIds={selectedFoodIds}
-        title="Limited"
+        title="Koristi umereno"
       />
       <FoodSection
         foods={condimentFoods}
         onSelect={onSelect}
         selectedFoodIds={selectedFoodIds}
-        title="Condiment"
+        title="Dodaci"
       />
     </View>
   );

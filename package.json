@@ -8,6 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build:android:preview": "eas build -p android --profile preview",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint"
   },

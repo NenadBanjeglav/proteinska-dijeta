@@ -55,13 +55,13 @@ export default function HomeRoute() {
     return (
       <Screen>
         <SectionHeader
-          description="Zavrsi nekoliko kratkih koraka da bismo izracunali tvoj dnevni cilj proteina."
+          description="Zavrsi nekoliko kratkih koraka da izracunamo tvoj dnevni cilj proteina."
           eyebrow="Danas"
           title="Zavrsi onboarding"
         />
         <EmptyState
           badge="Pocetak"
-          description="Cim potvrdis onboarding, ovde ces videti danasnje proteine, obroke, vodu i jutarnju tezinu."
+          description="Kad potvrdis onboarding, ovde ces pratiti proteine, obroke, vodu i jutarnju tezinu."
           title="Jos nemas aktivan plan"
         />
         <PrimaryButton
@@ -140,12 +140,7 @@ export default function HomeRoute() {
     <Screen contentClassName="gap-5">
       <DashboardHeader
         dayLabel={getDayLabel(protocol.elapsedDays, protocol.totalDays)}
-        onPlanPress={() =>
-          showAlert(
-            "Plan protokola",
-            `Danas je ${protocol.elapsedDays}. dan plana. ${getRemainingLabel(protocol.remainingDays)}.`,
-          )
-        }
+        onSettingsPress={() => router.push("../settings")}
         progress={protocol.progress}
         remainingLabel={getRemainingLabel(protocol.remainingDays)}
         title={`${getGreeting()}, ${data.userName || "sportista"}`}

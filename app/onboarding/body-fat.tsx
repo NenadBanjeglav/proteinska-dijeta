@@ -52,7 +52,7 @@ export default function BodyFatRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Ako ne znas procenat masti, mozes koristiti BMI procenu kao grub fallback za neaktivne osobe."
+      description="Ako ne znas procenat masti, mozemo grubo da ga procenimo preko BMI-ja, ali samo za neaktivne osobe."
       onPrimaryPress={() => {
         if (draftMode === "manual" && manualBodyFat !== null) {
           commitStep({
@@ -117,7 +117,7 @@ export default function BodyFatRoute() {
       ) : (
         <>
           <NumericInputCard
-            helpText="BMI procena je samo gruba procena za neaktivne osobe."
+            helpText="BMI procena je samo okvirna i najkorisnija je za neaktivne osobe."
             large={false}
             label="Visina"
             onChangeText={setDraftHeight}
@@ -127,7 +127,7 @@ export default function BodyFatRoute() {
           />
 
           <InfoCallout
-            description="Ako si atletski gradjen ili misicav, BMI moze ozbiljno da promasi. U tom slucaju unesi procenat masti rucno."
+            description="Ako si misicav ili atletski gradjen, BMI lako moze da pogresi. Tada je bolje da procenat masti uneses rucno."
             title="Upozorenje"
             tone="warning"
           />
@@ -142,7 +142,7 @@ export default function BodyFatRoute() {
               </Text>
             ) : (
               <Text className="text-base text-muted">
-                Unesi visinu da bismo izracunali BMI.
+                Unesi visinu da izracunamo BMI.
               </Text>
             )}
             {bmiEstimate.estimatedBodyFatPct !== null ? (
@@ -151,7 +151,7 @@ export default function BodyFatRoute() {
               </Text>
             ) : bmiEstimate.bmi !== null ? (
               <Text className="text-base leading-6 text-danger">
-                Ovaj BMI rezultat nije podrzan za pouzdanu procenu. Prebaci se na
+                Ovaj BMI rezultat nije pogodan za pouzdanu procenu. Prebaci se na
                 rucni unos.
               </Text>
             ) : null}

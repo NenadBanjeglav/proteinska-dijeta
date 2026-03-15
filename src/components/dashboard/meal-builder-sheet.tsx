@@ -49,15 +49,15 @@ const DEFAULT_GRAMS: Record<FoodKind, number> = {
 const STEP_COPY: Record<MealBuilderStep, { title: string; description: string }> = {
   1: {
     title: "1. Protein",
-    description: "Izaberi jedan ili vise proteinskih izvora i podesi grame za svaki.",
+    description: "Izaberi jedan ili vise proteinskih izvora i odmah podesi grame.",
   },
   2: {
     title: "2. Povrce i dodaci",
-    description: "Dodaj vise izvora povrca i po zelji lagane dodatke za ukus.",
+    description: "Dodaj povrce i, po zelji, manje dodatke za ukus.",
   },
   3: {
     title: "3. Suplementi i rezime",
-    description: "Preleti dnevne suplemente i potvrdi ukupan protein i kalorije.",
+    description: "Preleti dnevne suplemente i proveri ukupan protein i kalorije.",
   },
 };
 
@@ -255,7 +255,7 @@ export function MealBuilderSheet({
               />
 
               <OptionalChoiceCard
-                label="Bez dodatnih dodataka"
+                label="Bez dodataka u ovom obroku"
                 onPress={() => setCondiments([])}
                 selected={condiments.length === 0}
               />
@@ -279,7 +279,7 @@ export function MealBuilderSheet({
             {step === 1 ? (
               <PrimaryButton
                 disabled={!proteins.length}
-                label="Dalje na povrce"
+                label="Dalje na povrce i dodatke"
                 onPress={() => setStep(2)}
               />
             ) : null}

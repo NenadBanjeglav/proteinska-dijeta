@@ -131,7 +131,7 @@ export function WeightEntrySheet({
             {previousEntry ? formatWeightKg(previousEntry.kg) : "-"}
           </Text>
           <Text className="text-sm leading-6 text-muted">
-            Danasnji unos se cuva samo za datum {today}.
+            Ovaj unos se cuva samo za datum {today}.
           </Text>
         </Card>
 
@@ -146,7 +146,7 @@ export function WeightEntrySheet({
             {draftWeightKg === null ? "-" : formatWeightKg(draftWeightKg)}
           </Text>
           <Text className="text-sm text-muted">
-            Koristi fine ili grube korake za brzo podesavanje.
+            Podesi tezinu sitnim ili krupnim koracima.
           </Text>
         </Card>
 

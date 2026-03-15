@@ -1,9 +1,14 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TAB_LABELS } from "@/src/constants/copy";
 import { colors } from "@/src/constants/colors";
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 10);
+
   return (
     <Tabs
       screenOptions={{
@@ -11,25 +16,23 @@ export default function TabsLayout() {
         sceneStyle: {
           backgroundColor: colors.background,
         },
-        tabBarActiveTintColor: colors.text,
+        tabBarActiveTintColor: colors.warning,
         tabBarInactiveTintColor: colors.muted,
-        tabBarIconStyle: {
-          display: "none",
-        },
         tabBarItemStyle: {
           justifyContent: "center",
-          paddingVertical: 6,
+          paddingTop: 6,
         },
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 72,
+          height: 62 + bottomInset,
           paddingTop: 8,
-          paddingBottom: 10,
+          paddingBottom: bottomInset,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "700",
+          paddingBottom: 2,
         },
       }}
     >
@@ -37,12 +40,26 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: TAB_LABELS.home,
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons
+              color={color}
+              name={focused ? "home" : "home-outline"}
+              size={size}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="progress"
         options={{
           title: TAB_LABELS.progress,
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons
+              color={color}
+              name={focused ? "bar-chart" : "bar-chart-outline"}
+              size={size}
+            />
+          ),
         }}
       />
     </Tabs>

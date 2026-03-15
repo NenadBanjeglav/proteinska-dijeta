@@ -1,13 +1,14 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { ProgressBar } from "@/src/components/ui/progress-bar";
+import { HeaderActionButton } from "@/src/components/ui/header-action-button";
 
 type DashboardHeaderProps = {
   dayLabel: string;
   title: string;
   remainingLabel: string;
   progress: number;
-  onPlanPress: () => void;
+  onSettingsPress: () => void;
 };
 
 export function DashboardHeader({
@@ -15,7 +16,7 @@ export function DashboardHeader({
   title,
   remainingLabel,
   progress,
-  onPlanPress,
+  onSettingsPress,
 }: DashboardHeaderProps) {
   return (
     <View className="gap-4">
@@ -27,14 +28,13 @@ export function DashboardHeader({
           <Text className="text-[34px] font-black leading-10 text-text">{title}</Text>
         </View>
 
-        <Pressable
-          className="h-12 w-12 items-center justify-center rounded-2xl bg-surface-strong"
-          onPress={onPlanPress}
-        >
-          <Text className="text-xs font-bold uppercase tracking-[1px] text-warning">
-            Plan
-          </Text>
-        </Pressable>
+        <View className="gap-2">
+          <HeaderActionButton
+            accessibilityLabel="Podesavanja"
+            icon="settings-outline"
+            onPress={onSettingsPress}
+          />
+        </View>
       </View>
 
       <View className="flex-row items-center gap-3">

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -7,9 +8,9 @@ import { InfoCallout } from "@/src/components/onboarding/info-callout";
 import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
 
 const BENEFITS = [
-  "0.2-0.5 kg gubitka masti dnevno je moguc u pravim uslovima.",
-  "Dovoljan unos proteina cuva misice dok skidas mast.",
-  "Cilj proteina se racuna prema tvom telu i nivou aktivnosti.",
+  "Brz pad telesne masti je moguc kada se plan sprovodi dosledno.",
+  "Dovoljan unos proteina pomaze da sacuvas misice dok skidas mast.",
+  "Dnevni cilj proteina prilagodjavamo tvom telu i nivou aktivnosti.",
 ];
 
 export default function WelcomeRoute() {
@@ -21,10 +22,11 @@ export default function WelcomeRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Najefikasniji protokol za brzo mrsavljenje, naucno potvrdjen i fokusiran na ocuvanje misica."
+      description="Brz i disciplinovan pristup mrsavljenju sa fokusom na ocuvanje misica."
       onPrimaryPress={goNext}
       primaryLabel="Pocni"
       showBack={false}
+      showHeader={false}
       showProgress={false}
       step={1}
       title="Brzo Mrsavljenje"
@@ -42,7 +44,7 @@ export default function WelcomeRoute() {
             width: 88,
           }}
         >
-          <Text className="text-3xl font-black text-text">PSMF</Text>
+          <Ionicons color="#FFF7ED" name="flame" size={36} />
         </LinearGradient>
 
         <View className="items-center gap-3">
@@ -53,7 +55,7 @@ export default function WelcomeRoute() {
             Protein Sparing Modified Fast
           </Text>
           <Text className="max-w-[320px] text-center text-base leading-7 text-muted">
-            Sacuvaj misice dok gubis masnocu maksimalnom brzinom.
+            Sacuvaj misice dok skidas masnocu sto efikasnije.
           </Text>
         </View>
       </View>
@@ -71,14 +73,10 @@ export default function WelcomeRoute() {
       </View>
 
       <InfoCallout
-        description="Medicinski zasnovan protokol. Ako imas hronicne probleme ili terapiju, konsultuj lekara pre pocetka."
+        description="Ovo je strog protokol. Ako imas hronicne tegobe ili koristis terapiju, posavetuj se sa lekarom pre pocetka."
         title="Vazno"
         tone="warning"
       />
-
-      <Text className="mt-auto text-center text-sm leading-5 text-muted">
-        Zasnovano na knjizi Lyle McDonald-a: Rapid Fat Loss Handbook
-      </Text>
     </OnboardingStepScreen>
   );
 }

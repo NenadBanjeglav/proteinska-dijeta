@@ -19,7 +19,7 @@ type FoodAmountSheetProps = {
 const CONFIG = {
   protein: {
     title: "Kolicina proteina",
-    description: "Podesi grame odmah, bez skrolovanja kroz ceo korak.",
+    description: "Podesi grame odmah da kasnije ne trazis kolicinu po ekranu.",
     min: 50,
     fineStep: 10,
     coarseStep: 50,
@@ -27,7 +27,7 @@ const CONFIG = {
   },
   vegetable: {
     title: "Kolicina povrca",
-    description: "Tier A povrce slobodno guraj vise. Limited drzi u manjim kolicinama.",
+    description: "Povrce prilagodi obroku, a skrobnije opcije drzi umerenim.",
     min: 25,
     fineStep: 25,
     coarseStep: 100,
@@ -35,7 +35,7 @@ const CONFIG = {
   },
   condiment: {
     title: "Kolicina condimenta",
-    description: "Drzi condimente laganim. Ovaj korak je vise za ukus nego za bazu obroka.",
+    description: "Dodaci su tu zbog ukusa, zato ih drzi u manjim kolicinama.",
     min: 5,
     fineStep: 5,
     coarseStep: 20,

@@ -92,6 +92,22 @@ export function formatNumberInput(value: number | null, places = 1) {
   return roundTo(value, places).toString().replace(/\.0$/, "");
 }
 
+export function isProteinRangeFixed(range: [number, number]) {
+  return range[0] === range[1];
+}
+
+export function formatProteinRangeLabel(range: [number, number]) {
+  if (isProteinRangeFixed(range)) {
+    return `${formatNumberInput(range[0], 2)} g/lb`;
+  }
+
+  return `${formatNumberInput(range[0], 2)}-${formatNumberInput(range[1], 2)} g/lb`;
+}
+
+export function formatProteinMultiplierLabel(multiplier: number) {
+  return `${formatNumberInput(multiplier, 2)} g/lb`;
+}
+
 export function formatWeightForUnit(weightKg: number | null, unit: WeightUnit) {
   if (weightKg === null) {
     return "";
