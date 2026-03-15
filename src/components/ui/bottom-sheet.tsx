@@ -3,7 +3,9 @@ import {
   Animated,
   Modal,
   Pressable,
+  ScrollView,
   Text,
+  useWindowDimensions,
   View,
   type EasingFunction,
 } from "react-native";
@@ -28,6 +30,8 @@ export function BottomSheet({
   const translateY = useRef(new Animated.Value(32)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const [visible, setVisible] = useState(open);
+  const { height } = useWindowDimensions();
+  const maxContentHeight = Math.min(height * 0.78, 680);
 
   useEffect(() => {
     if (open) {
@@ -83,14 +87,25 @@ export function BottomSheet({
       <View className="flex-1 justify-end bg-transparent">
         <Pressable className="flex-1 bg-black/60" onPress={() => onOpenChange(false)} />
         <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-          <Card className="rounded-b-none border-b-0 px-6 pb-10 pt-4">
+          <Card
+            className="rounded-b-none border-b-0 px-6 pb-10 pt-4"
+            style={{ maxHeight: height - 16 }}
+          >
             <View className="mb-4 items-center gap-3">
               <View className="h-1.5 w-14 rounded-full bg-border" />
               {title ? (
                 <Text className="text-base font-semibold text-text">{title}</Text>
               ) : null}
             </View>
-            {children}
+            <ScrollView
+              bounces={false}
+              contentContainerStyle={{ paddingBottom: 4 }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: maxContentHeight }}
+            >
+              {children}
+            </ScrollView>
           </Card>
         </Animated.View>
       </View>

@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
-import { ActionPill } from "@/src/components/dashboard/action-pill";
-import { MealCard } from "@/src/components/dashboard/meal-card";
+import { DashboardHeader } from "@/src/components/dashboard/dashboard-header";
+import { MealsSection } from "@/src/components/dashboard/meals-section";
 import { ProgressMetricCard } from "@/src/components/dashboard/progress-metric-card";
 import { WaterTrackerCard } from "@/src/components/dashboard/water-tracker-card";
 import { WeightEntryCard } from "@/src/components/dashboard/weight-entry-card";
+import { WeightEntrySheet } from "@/src/components/dashboard/weight-entry-sheet";
 import { Card } from "@/src/components/ui/card";
 import { EmptyState } from "@/src/components/ui/empty-state";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
-import { ProgressBar } from "@/src/components/ui/progress-bar";
 import { Screen } from "@/src/components/ui/screen";
 import { SectionHeader } from "@/src/components/ui/section-header";
-import { useToday } from "@/src/hooks/use-today";
+import {
+  getDayLabel,
+  getGreeting,
+  getRemainingLabel,
+  getWeightDelta,
+} from "@/src/lib/dashboard";
 import { calcWaterTargetGlasses } from "@/src/lib/psmf";
-import { roundTo } from "@/src/lib/units";
+import { useToday } from "@/src/hooks/use-today";
 import { usePsmfStore } from "@/src/store/psmf-store";
 import {
   selectCaloriesConsumed,
@@ -28,68 +33,20 @@ import {
   selectTodayEntry,
   selectWaterGlasses,
 } from "@/src/store/selectors";
-import type { LoggedMeal, WeightEntry } from "@/src/types/app";
 
-function getGreeting(date = new Date()) {
-  const hour = date.getHours();
-
-  if (hour < 12) {
-    return "Dobro jutro";
-  }
-
-  if (hour < 18) {
-    return "Dobar dan";
-  }
-
-  return "Dobro vece";
-}
-
-function getDayLabel(elapsedDays: number, totalDays: number | null) {
-  const elapsed = `${Math.max(1, elapsedDays)}`.padStart(2, "0");
-
-  if (totalDays === null) {
-    return `DAN ${elapsed}`;
-  }
-
-  return `DAN ${elapsed} OD ${`${totalDays}`.padStart(2, "0")}`;
-}
-
-function getRemainingLabel(remainingDays: number | null) {
-  if (remainingDays === null) {
-    return "Plan bez roka";
-  }
-
-  if (remainingDays === 0) {
-    return "Zavrsni dan";
-  }
-
-  if (remainingDays === 1) {
-    return "1 dan preostao";
-  }
-
-  return `${remainingDays} dana preostalo`;
-}
-
-function getMealsSummary(mealCount: number, proteinConsumed: number) {
-  const mealLabel = mealCount === 1 ? "obrok" : "obroka";
-  return `${mealCount} ${mealLabel} - ${proteinConsumed}g proteina ukupno`;
-}
-
-function getWeightDelta(todayEntry: WeightEntry | null, previousEntry: WeightEntry | null) {
-  if (!todayEntry || !previousEntry || previousEntry.date >= todayEntry.date) {
-    return null;
-  }
-
-  return roundTo(todayEntry.kg - previousEntry.kg, 1);
+function showAlert(title: string, message: string) {
+  Alert.alert(title, message);
 }
 
 export default function HomeRoute() {
   const data = usePsmfStore((store) => store.data);
   const clearStore = usePsmfStore((store) => store.clearStore);
+  const saveWeightEntry = usePsmfStore((store) => store.saveWeightEntry);
   const setWaterGlasses = usePsmfStore((store) => store.setWaterGlasses);
   const { today } = useToday();
   const onboarded = selectIsOnboarded(data);
   const [isResetting, setIsResetting] = useState(false);
+  const [weightSheetOpen, setWeightSheetOpen] = useState(false);
 
   function handleResetPress() {
     if (isResetting) {
@@ -117,10 +74,6 @@ export default function HomeRoute() {
         },
       ],
     );
-  }
-
-  function showPhaseAlert(title: string, message: string) {
-    Alert.alert(title, message);
   }
 
   if (!onboarded) {
@@ -158,46 +111,33 @@ export default function HomeRoute() {
     data.startingWeightKg === null ? 8 : calcWaterTargetGlasses(data.startingWeightKg);
   const proteinProgress = proteinTarget === 0 ? 0 : proteinConsumed / proteinTarget;
   const calorieProgress = calorieTarget === 0 ? 0 : caloriesConsumed / calorieTarget;
-  const greeting = getGreeting();
-  const userLabel = data.userName || "sportista";
-  const dayLabel = getDayLabel(protocol.elapsedDays, protocol.totalDays);
-  const remainingLabel = getRemainingLabel(protocol.remainingDays);
+
+  async function handleSaveWeight(kg: number) {
+    try {
+      await saveWeightEntry(kg, today);
+    } catch {
+      showAlert(
+        "Greska pri cuvanju",
+        "Nismo uspeli da sacuvamo danasnju tezinu. Pokusaj ponovo.",
+      );
+      throw new Error("save-weight-failed");
+    }
+  }
 
   return (
     <Screen contentClassName="gap-5">
-      <View className="gap-4">
-        <View className="flex-row items-start justify-between gap-4">
-          <View className="flex-1 gap-2">
-            <Text className="text-xs font-semibold uppercase tracking-[2px] text-muted">
-              {dayLabel}
-            </Text>
-            <Text className="text-[34px] font-black leading-10 text-text">
-              {greeting}, {userLabel}
-            </Text>
-          </View>
-
-          <Pressable
-            className="h-12 w-12 items-center justify-center rounded-2xl bg-surface-strong"
-            onPress={() =>
-              showPhaseAlert(
-                "Plan protokola",
-                `Danas je ${protocol.elapsedDays}. dan plana. ${remainingLabel}.`,
-              )
-            }
-          >
-            <Text className="text-xs font-bold uppercase tracking-[1px] text-warning">
-              Plan
-            </Text>
-          </Pressable>
-        </View>
-
-        <View className="flex-row items-center gap-3">
-          <View className="flex-1">
-            <ProgressBar progress={protocol.progress} />
-          </View>
-          <Text className="text-sm text-muted">{remainingLabel}</Text>
-        </View>
-      </View>
+      <DashboardHeader
+        dayLabel={getDayLabel(protocol.elapsedDays, protocol.totalDays)}
+        onPlanPress={() =>
+          showAlert(
+            "Plan protokola",
+            `Danas je ${protocol.elapsedDays}. dan plana. ${getRemainingLabel(protocol.remainingDays)}.`,
+          )
+        }
+        progress={protocol.progress}
+        remainingLabel={getRemainingLabel(protocol.remainingDays)}
+        title={`${getGreeting()}, ${data.userName || "sportista"}`}
+      />
 
       <View className="flex-row gap-3">
         <ProgressMetricCard
@@ -229,67 +169,20 @@ export default function HomeRoute() {
         targetGlasses={waterTarget}
       />
 
-      <View className="gap-3">
-        <View className="flex-row items-end justify-between gap-4">
-          <View className="flex-1 gap-1">
-            <Text className="text-2xl font-bold text-text">Danasnji obroci</Text>
-            <Text className="text-sm text-muted">
-              {getMealsSummary(meals.length, proteinConsumed)}
-            </Text>
-          </View>
-
-          <ActionPill
-            label="+ Dodaj obrok"
-            onPress={() =>
-              showPhaseAlert(
-                "Dodavanje obroka",
-                "Meal logger dolazi u fazi 6. Ovaj shell sada samo priprema mesto za njega.",
-              )
-            }
-            variant="accent"
-          />
-        </View>
-
-        {meals.length ? (
-          meals.map((meal) => (
-            <MealCard
-              key={meal.id}
-              meal={meal}
-              onDelete={(entry: LoggedMeal) => {
-                showPhaseAlert(
-                  "Brisanje obroka",
-                  `Brisanje i izmena obroka stizu u fazi 6. "${entry.name}" je trenutno samo prikazan u shell-u.`,
-                );
-              }}
-              onEdit={(entry: LoggedMeal) => {
-                showPhaseAlert(
-                  "Izmena obroka",
-                  `Izmena obroka "${entry.name}" dolazi u fazi 6.`,
-                );
-              }}
-            />
-          ))
-        ) : (
-          <Card className="gap-2">
-            <Text className="text-lg font-bold text-text">Jos nema obroka za danas</Text>
-            <Text className="text-sm leading-6 text-muted">
-              Dodavanje i izmena obroka dolaze u sledecoj fazi. Ovaj ekran je sada spreman
-              da prikaze stvarne obroke cim meal logger bude zavrsen.
-            </Text>
-          </Card>
-        )}
-      </View>
+      <MealsSection meals={meals} proteinConsumed={proteinConsumed} />
 
       <WeightEntryCard
         deltaKg={todayWeightDelta}
-        onPress={() =>
-          showPhaseAlert(
-            "Unos tezine",
-            todayEntry
-              ? "Izmena danasnje tezine dolazi u fazi 5."
-              : "Dnevni unos tezine dolazi u fazi 5.",
-          )
-        }
+        onPress={() => setWeightSheetOpen(true)}
+        todayWeightKg={todayEntry?.kg ?? null}
+      />
+
+      <WeightEntrySheet
+        onOpenChange={setWeightSheetOpen}
+        onSave={handleSaveWeight}
+        open={weightSheetOpen}
+        previousEntry={previousEntry}
+        today={today}
         todayWeightKg={todayEntry?.kg ?? null}
       />
 
