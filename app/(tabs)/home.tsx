@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Alert, Text, View } from "react-native";
 
 import { DashboardHeader } from "@/src/components/dashboard/dashboard-header";
+import { MealBuilderSheet } from "@/src/components/dashboard/meal-builder-sheet";
 import { MealsSection } from "@/src/components/dashboard/meals-section";
 import { ProgressMetricCard } from "@/src/components/dashboard/progress-metric-card";
 import { WaterTrackerCard } from "@/src/components/dashboard/water-tracker-card";
@@ -33,6 +34,7 @@ import {
   selectTodayEntry,
   selectWaterGlasses,
 } from "@/src/store/selectors";
+import type { LoggedMeal } from "@/src/types/app";
 
 function showAlert(title: string, message: string) {
   Alert.alert(title, message);
@@ -42,11 +44,15 @@ export default function HomeRoute() {
   const data = usePsmfStore((store) => store.data);
   const clearStore = usePsmfStore((store) => store.clearStore);
   const saveWeightEntry = usePsmfStore((store) => store.saveWeightEntry);
+  const saveMeal = usePsmfStore((store) => store.saveMeal);
+  const deleteMeal = usePsmfStore((store) => store.deleteMeal);
   const setWaterGlasses = usePsmfStore((store) => store.setWaterGlasses);
   const { today } = useToday();
   const onboarded = selectIsOnboarded(data);
   const [isResetting, setIsResetting] = useState(false);
   const [weightSheetOpen, setWeightSheetOpen] = useState(false);
+  const [mealSheetOpen, setMealSheetOpen] = useState(false);
+  const [editingMeal, setEditingMeal] = useState<LoggedMeal | null>(null);
 
   function handleResetPress() {
     if (isResetting) {
@@ -124,6 +130,43 @@ export default function HomeRoute() {
     }
   }
 
+  async function handleSaveMeal(meal: LoggedMeal) {
+    try {
+      await saveMeal(meal);
+      setEditingMeal(null);
+    } catch {
+      showAlert(
+        "Greska pri cuvanju",
+        "Nismo uspeli da sacuvamo obrok. Pokusaj ponovo.",
+      );
+      throw new Error("save-meal-failed");
+    }
+  }
+
+  function handleMealSheetChange(nextOpen: boolean) {
+    setMealSheetOpen(nextOpen);
+    if (!nextOpen) {
+      setEditingMeal(null);
+    }
+  }
+
+  function handleDeleteMeal(meal: LoggedMeal) {
+    Alert.alert(
+      "Obrisi obrok",
+      `Da li sigurno zelis da obrises "${meal.name}"?`,
+      [
+        { text: "Otkazi", style: "cancel" },
+        {
+          text: "Obrisi",
+          style: "destructive",
+          onPress: () => {
+            void deleteMeal(meal.id);
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <Screen contentClassName="gap-5">
       <DashboardHeader
@@ -169,7 +212,19 @@ export default function HomeRoute() {
         targetGlasses={waterTarget}
       />
 
-      <MealsSection meals={meals} proteinConsumed={proteinConsumed} />
+      <MealsSection
+        meals={meals}
+        onAdd={() => {
+          setEditingMeal(null);
+          setMealSheetOpen(true);
+        }}
+        onDelete={handleDeleteMeal}
+        onEdit={(meal) => {
+          setEditingMeal(meal);
+          setMealSheetOpen(true);
+        }}
+        proteinConsumed={proteinConsumed}
+      />
 
       <WeightEntryCard
         deltaKg={todayWeightDelta}
@@ -184,6 +239,15 @@ export default function HomeRoute() {
         previousEntry={previousEntry}
         today={today}
         todayWeightKg={todayEntry?.kg ?? null}
+      />
+
+      <MealBuilderSheet
+        date={today}
+        meal={editingMeal}
+        mealsForDate={meals}
+        onOpenChange={handleMealSheetChange}
+        onSave={handleSaveMeal}
+        open={mealSheetOpen}
       />
 
       {__DEV__ ? (

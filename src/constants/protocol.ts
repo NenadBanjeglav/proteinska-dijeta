@@ -8,12 +8,20 @@ export const GOAL_DAYS: Record<GoalType, number> = {
 };
 
 export const SUPPLEMENT_GUIDANCE = [
-  "Riblje ulje 6 x 1 g dnevno ili 1 kašika lanenog ulja",
+  "Riblje ulje 6 x 1 g dnevno ili 1 kasika lanenog ulja",
   "Natrijum 3-5 g dnevno",
   "Kalijum do 1 g dnevno",
   "Magnezijum 500 mg dnevno",
   "Kalcijum 600-1200 mg dnevno, podeljeno AM/PM",
   "Dnevni multivitamin",
+] as const;
+
+export const SUPPLEMENT_CHECKLIST = [
+  "Omega-3 / riblje ulje",
+  "Dnevni multivitamin",
+  "Kalcijum",
+  "Magnezijum",
+  "Kalijumova so - soli po ukusu",
 ] as const;
 
 export const PROTOCOL_GUIDANCE: Record<
@@ -29,12 +37,12 @@ export const PROTOCOL_GUIDANCE: Record<
     mainStretch: "11-12 dana",
     freeMeals: "Bez redovnih free meal obroka",
     refeed: "2-3 high-carb dana na kraju",
-    postStretch: "Povratak na normalniji režim dijete",
+    postStretch: "Povratak na normalniji rezim dijete",
   },
   2: {
     mainStretch: "2-6 nedelja",
     freeMeals: "1 free meal nedeljno",
-    refeed: "Jedan 5-časovni refeed nedeljno",
+    refeed: "Jedan 5-casovni refeed nedeljno",
     postStretch: "2 nedelje diet break",
   },
   3: {

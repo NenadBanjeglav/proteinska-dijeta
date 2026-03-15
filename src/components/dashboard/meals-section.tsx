@@ -1,4 +1,4 @@
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { ActionPill } from "@/src/components/dashboard/action-pill";
 import { MealCard } from "@/src/components/dashboard/meal-card";
@@ -9,13 +9,18 @@ import type { LoggedMeal } from "@/src/types/app";
 type MealsSectionProps = {
   meals: LoggedMeal[];
   proteinConsumed: number;
+  onAdd: () => void;
+  onEdit: (meal: LoggedMeal) => void;
+  onDelete: (meal: LoggedMeal) => void;
 };
 
-function showPhaseAlert(title: string, message: string) {
-  Alert.alert(title, message);
-}
-
-export function MealsSection({ meals, proteinConsumed }: MealsSectionProps) {
+export function MealsSection({
+  meals,
+  proteinConsumed,
+  onAdd,
+  onEdit,
+  onDelete,
+}: MealsSectionProps) {
   return (
     <View className="gap-3">
       <View className="flex-row items-end justify-between gap-4">
@@ -28,12 +33,7 @@ export function MealsSection({ meals, proteinConsumed }: MealsSectionProps) {
 
         <ActionPill
           label="+ Dodaj obrok"
-          onPress={() =>
-            showPhaseAlert(
-              "Dodavanje obroka",
-              "Meal logger dolazi u fazi 6. Ovaj shell sada samo priprema mesto za njega.",
-            )
-          }
+          onPress={onAdd}
           variant="accent"
         />
       </View>
@@ -43,26 +43,15 @@ export function MealsSection({ meals, proteinConsumed }: MealsSectionProps) {
           <MealCard
             key={meal.id}
             meal={meal}
-            onDelete={(entry) => {
-              showPhaseAlert(
-                "Brisanje obroka",
-                `Brisanje i izmena obroka stizu u fazi 6. "${entry.name}" je trenutno samo prikazan u shell-u.`,
-              );
-            }}
-            onEdit={(entry) => {
-              showPhaseAlert(
-                "Izmena obroka",
-                `Izmena obroka "${entry.name}" dolazi u fazi 6.`,
-              );
-            }}
+            onDelete={onDelete}
+            onEdit={onEdit}
           />
         ))
       ) : (
         <Card className="gap-2">
           <Text className="text-lg font-bold text-text">Jos nema obroka za danas</Text>
           <Text className="text-sm leading-6 text-muted">
-            Dodavanje i izmena obroka dolaze u sledecoj fazi. Ovaj ekran je sada spreman
-            da prikaze stvarne obroke cim meal logger bude zavrsen.
+            Dodaj prvi obrok i prati koliko si se priblizio dnevnom proteinskom cilju.
           </Text>
         </Card>
       )}
