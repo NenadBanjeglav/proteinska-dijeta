@@ -7,16 +7,7 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerShadowVisible: false,
-        headerTintColor: colors.text,
-        headerTitleStyle: {
-          color: colors.text,
-          fontSize: 20,
-          fontWeight: "700",
-        },
+        headerShown: false,
         sceneStyle: {
           backgroundColor: colors.background,
         },
@@ -25,9 +16,13 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 72,
+          height: 76,
           paddingTop: 10,
-          paddingBottom: 10,
+          paddingBottom: 12,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "700",
         },
       }}
     >

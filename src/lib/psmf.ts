@@ -83,3 +83,7 @@ export function calcProteinTarget(
 export function calcEstimatedCalories(proteinG: number) {
   return Math.round(proteinG * 4 + 20);
 }
+
+export function calcWaterTargetGlasses(weightKg: number) {
+  return Math.max(1, Math.round((weightKg * 35) / 250));
+}
