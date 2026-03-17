@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Text, View, useWindowDimensions } from "react-native";
 
+import { GoalProjectionCard } from "@/src/components/projection/goal-projection-card";
 import { MilestoneCard } from "@/src/components/progress/milestone-card";
 import { ProgressHeroCard } from "@/src/components/progress/progress-hero-card";
 import { ProgressPeriodToggle } from "@/src/components/progress/progress-period-toggle";
@@ -10,8 +11,13 @@ import { WeightChart } from "@/src/components/progress/weight-chart";
 import { Card } from "@/src/components/ui/card";
 import { EmptyState } from "@/src/components/ui/empty-state";
 import { HeaderActionButton } from "@/src/components/ui/header-action-button";
+import { PrimaryButton } from "@/src/components/ui/primary-button";
 import { Screen } from "@/src/components/ui/screen";
 import { useToday } from "@/src/hooks/use-today";
+import {
+  formatProjectionDate,
+  formatProjectedDays,
+} from "@/src/lib/projection";
 import {
   buildProgressMilestones,
   buildRecentWeightRows,
@@ -35,7 +41,11 @@ import {
 import { usePsmfStore } from "@/src/store/psmf-store";
 import {
   selectCurrentWeightKg,
+  selectCurrentProtocolContext,
+  selectGoalProgress,
+  selectGoalProjection,
   selectIsOnboarded,
+  selectNextCategoryThreshold,
   selectProtocolProgress,
   selectWeightHistory,
 } from "@/src/store/selectors";
@@ -79,7 +89,11 @@ export default function ProgressRoute() {
 
   const entries = selectWeightHistory(data);
   const currentWeightKg = selectCurrentWeightKg(data);
+  const currentProtocolContext = selectCurrentProtocolContext(data);
+  const nextCategoryThreshold = selectNextCategoryThreshold(data);
   const protocol = selectProtocolProgress(data, today);
+  const goalProjection = selectGoalProjection(data, today);
+  const goalProgress = selectGoalProgress(data);
   const elapsedDays = getElapsedDaysFromStart(data.startDate, today);
   const totalLostKg = calcTotalLostKg(data.startingWeightKg, currentWeightKg);
   const averageDailyLossKg = calcAverageDailyLossKg(totalLostKg, Math.max(1, elapsedDays));
@@ -88,11 +102,18 @@ export default function ProgressRoute() {
   const caloriesFromFat = calcEstimatedCaloriesFromFat(totalLostKg);
   const chartEntries = selectChartEntriesForPeriod(entries, period);
   const recentRows = buildRecentWeightRows(selectRecentEntries(entries, 5));
+  const heroProgress = goalProgress?.progress ?? protocol.progress;
+  const heroElapsedLabel =
+    goalProjection?.projectedDays !== null && goalProjection?.projectedDays !== undefined
+      ? goalProjection.projectedDays === 0
+        ? "Cilj je dostignut"
+        : `~${formatProjectedDays(goalProjection.projectedDays)} do cilja`
+      : getElapsedLabel(Math.max(1, elapsedDays));
   const milestones = buildProgressMilestones({
     totalLostKg,
     complianceDays,
     elapsedDays,
-    progress: protocol.progress,
+    progress: heroProgress,
   });
 
   return (
@@ -101,7 +122,9 @@ export default function ProgressRoute() {
         <View className="min-w-0 flex-1 gap-1">
           <Text className="text-[40px] font-black leading-[44px] text-text">Napredak</Text>
           <Text className="text-base text-muted">
-            {getPhaseLabel(elapsedDays, protocol.totalDays)}
+            {goalProjection
+              ? `Cilj ${formatWeightStat(data.goalWeightKg)} uz live projekciju`
+              : getPhaseLabel(elapsedDays, protocol.totalDays)}
           </Text>
         </View>
 
@@ -117,17 +140,90 @@ export default function ProgressRoute() {
       <ProgressHeroCard
         compact={compact}
         currentWeightLabel={formatWeightStat(currentWeightKg)}
-        elapsedLabel={getElapsedLabel(Math.max(1, elapsedDays))}
-        footerCenter={getProtocolLabel(protocol.remainingDays)}
-        footerLeft={formatWeightStat(data.startingWeightKg)}
-        footerRight={`Dan ${Math.max(1, protocol.elapsedDays)}`}
+        elapsedLabel={heroElapsedLabel}
+        footerCenter={
+          goalProjection?.projectedTargetDate
+            ? `Oko ${formatProjectionDate(goalProjection.projectedTargetDate)}`
+            : getProtocolLabel(protocol.remainingDays)
+        }
+        footerLeft={`Start ${formatWeightStat(data.startingWeightKg)}`}
+        footerRight={
+          data.goalWeightKg !== null
+            ? `Cilj ${formatWeightStat(data.goalWeightKg)}`
+            : `Dan ${Math.max(1, protocol.elapsedDays)}`
+        }
         footerStack={singleColumnStats}
-        progress={protocol.progress}
-        progressPercentLabel={`${Math.round(protocol.progress * 100)}%`}
-        progressTitle="Napredak kroz fazu"
+        progress={heroProgress}
+        progressPercentLabel={`${Math.round(heroProgress * 100)}%`}
+        progressTitle={
+          goalProgress ? "Napredak ka ciljnoj tezini" : "Napredak kroz fazu"
+        }
         startingWeightLabel={formatWeightStat(data.startingWeightKg)}
         totalLostLabel={formatWeightDeltaKg(totalLostKg)}
       />
+
+      {currentProtocolContext ? (
+        <Card className="gap-3">
+          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
+            Danasnji cilj proteina
+          </Text>
+
+          <View className="flex-row flex-wrap gap-3">
+            <View className="min-w-[120px] flex-1 gap-1">
+              <Text className="text-xs uppercase tracking-[1.6px] text-muted">Trenutno</Text>
+              <Text className="text-2xl font-black text-text">
+                {currentProtocolContext.categoryLabel}
+              </Text>
+            </View>
+            <View className="min-w-[120px] flex-1 gap-1">
+              <Text className="text-xs uppercase tracking-[1.6px] text-muted">Procena BF</Text>
+              <Text className="text-2xl font-black text-text">
+                ~{currentProtocolContext.estimatedBodyFatPct.toFixed(1)}%
+              </Text>
+            </View>
+            <View className="min-w-[120px] flex-1 gap-1">
+              <Text className="text-xs uppercase tracking-[1.6px] text-muted">Danasnji cilj</Text>
+              <Text className="text-2xl font-black text-text">
+                {currentProtocolContext.proteinTargetG} g
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-sm leading-6 text-muted">
+            {nextCategoryThreshold
+              ? `Sledeca veca promena oko ${formatWeightStat(nextCategoryThreshold.weightKg)}, kada ulazis u ${nextCategoryThreshold.targetCategoryLabel}.`
+              : "Cilj se sada menja postepeno sa svakom promenom tezine."}
+          </Text>
+        </Card>
+      ) : null}
+
+      {goalProjection ? (
+        <GoalProjectionCard
+          description="Ovaj grafik se osvezava po poslednjoj sacuvanoj jutarnjoj tezini, ne samo po brojevima sa pocetka."
+          eyebrow="Projekcija"
+          projection={goalProjection}
+          title="Putanja do ciljne tezine"
+        />
+      ) : (
+        <Card className="gap-4 border-warning/30 bg-surface">
+          <View className="gap-1">
+            <Text className="text-sm font-semibold uppercase tracking-[1.8px] text-warning">
+              Nedostaje ciljna tezina
+            </Text>
+            <Text className="text-2xl font-black text-text">
+              Ukljuci projekciju do cilja
+            </Text>
+          </View>
+          <Text className="text-sm leading-6 text-muted">
+            Dodaj ciljnu tezinu u podesavanjima da bismo izracunali koliko je jos ostalo do cilja i nacrtali projekciju.
+          </Text>
+          <PrimaryButton
+            label="Dodaj ciljnu tezinu"
+            onPress={() => router.push("../settings")}
+            variant="secondary"
+          />
+        </Card>
+      )}
 
       <Card className="gap-4">
         <View className={compact ? "gap-3" : "flex-row items-center justify-between gap-3"}>

@@ -23,14 +23,13 @@ import type { OnboardingWizardState } from "@/src/types/app";
 
 type OnboardingWizardContextValue = {
   state: OnboardingWizardState;
-  update: (patch: Partial<OnboardingWizardState>) => void;
   reset: () => void;
   syncStep: (step: OnboardingStep) => void;
   canContinue: boolean;
   commitStep: (patch?: Partial<OnboardingWizardState>) => boolean;
   goNext: () => boolean;
   goBack: () => boolean;
-  confirm: () => Promise<boolean>;
+  confirm: (patch?: Partial<OnboardingWizardState>) => Promise<boolean>;
   isSubmitting: boolean;
 };
 
@@ -48,10 +47,6 @@ export function OnboardingWizardProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
-
-  const update = useCallback((patch: Partial<OnboardingWizardState>) => {
-    setState((current) => ({ ...current, ...patch }));
-  }, []);
 
   const reset = useCallback(() => {
     setState(INITIAL_ONBOARDING_STATE);
@@ -103,14 +98,16 @@ export function OnboardingWizardProvider({ children }: PropsWithChildren) {
     return true;
   }, [state.step]);
 
-  const confirm = useCallback(async () => {
-    const profile = buildOnboardingProfile(state);
+  const confirm = useCallback(async (patch: Partial<OnboardingWizardState> = {}) => {
+    const nextState = { ...stateRef.current, ...patch };
+    const profile = buildOnboardingProfile(nextState);
     if (!profile) {
       return false;
     }
 
     setIsSubmitting(true);
     try {
+      setState(nextState);
       await saveOnboardingProfile(profile);
       reset();
       router.replace("/(tabs)/home");
@@ -118,13 +115,12 @@ export function OnboardingWizardProvider({ children }: PropsWithChildren) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [reset, saveOnboardingProfile, state]);
+  }, [reset, saveOnboardingProfile]);
 
   return (
     <OnboardingWizardContext.Provider
       value={{
         state,
-        update,
         reset,
         syncStep,
         canContinue: isStepValid(state, state.step),

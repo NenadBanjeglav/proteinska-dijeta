@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 
-import { ActionPill } from "@/src/components/dashboard/action-pill";
+import { InfoCallout } from "@/src/components/onboarding/info-callout";
 import { BottomSheet } from "@/src/components/ui/bottom-sheet";
 import { Card } from "@/src/components/ui/card";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
@@ -25,26 +25,53 @@ type WeightEntrySheetProps = {
 
 const MIN_WEIGHT_KG = 35;
 const MAX_WEIGHT_KG = 350;
-const FINE_STEP = 0.1;
-const COARSE_STEP = 1;
-
-function clampWeight(weightKg: number) {
-  return Math.min(MAX_WEIGHT_KG, Math.max(MIN_WEIGHT_KG, roundTo(weightKg, 1)));
-}
 
 function getInitialDraft(
   todayWeightKg: number | null,
   previousEntry: WeightEntry | null,
 ) {
   if (todayWeightKg !== null) {
-    return todayWeightKg;
+    return todayWeightKg.toFixed(1);
   }
 
   if (previousEntry) {
-    return previousEntry.kg;
+    return previousEntry.kg.toFixed(1);
   }
 
-  return null;
+  return "";
+}
+
+function normalizeWeightInput(value: string) {
+  const sanitized = value.replace(",", ".").replace(/[^0-9.]/g, "");
+
+  if (!sanitized) {
+    return "";
+  }
+
+  const hasDecimal = sanitized.includes(".");
+  const [wholePart, ...rest] = sanitized.split(".");
+  const normalizedWhole = wholePart.slice(0, 3);
+  const decimals = rest.join("").slice(0, 1);
+
+  if (hasDecimal) {
+    return `${normalizedWhole || "0"}.${decimals}`;
+  }
+
+  return normalizedWhole;
+}
+
+function parseWeightInput(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.replace(",", ".");
+  if (!/^\d+(\.\d{0,1})?$/.test(normalized)) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function getReferenceLabel(referenceEntry: WeightEntry | null, today: string) {
@@ -67,7 +94,7 @@ export function WeightEntrySheet({
   previousEntry,
   onSave,
 }: WeightEntrySheetProps) {
-  const [draftWeightKg, setDraftWeightKg] = useState<number | null>(
+  const [draftInput, setDraftInput] = useState(
     getInitialDraft(todayWeightKg, previousEntry),
   );
   const [isSaving, setIsSaving] = useState(false);
@@ -77,36 +104,34 @@ export function WeightEntrySheet({
       return;
     }
 
-    setDraftWeightKg(getInitialDraft(todayWeightKg, previousEntry));
+    setDraftInput(getInitialDraft(todayWeightKg, previousEntry));
     setIsSaving(false);
   }, [open, previousEntry, todayWeightKg]);
 
+  const parsedWeightKg = useMemo(() => parseWeightInput(draftInput), [draftInput]);
+  const isOutOfRange =
+    parsedWeightKg !== null &&
+    (parsedWeightKg < MIN_WEIGHT_KG || parsedWeightKg > MAX_WEIGHT_KG);
+
   const deltaKg = useMemo(() => {
-    if (draftWeightKg === null || !previousEntry || previousEntry.date >= today) {
+    if (parsedWeightKg === null || !previousEntry || previousEntry.date >= today) {
       return null;
     }
 
-    return roundTo(draftWeightKg - previousEntry.kg, 1);
-  }, [draftWeightKg, previousEntry, today]);
+    return roundTo(parsedWeightKg - previousEntry.kg, 1);
+  }, [parsedWeightKg, previousEntry, today]);
 
   const deltaTone = getWeightDeltaTone(deltaKg);
-  const canSave = draftWeightKg !== null;
-
-  function nudgeDraft(step: number) {
-    setDraftWeightKg((current) => {
-      const base = current ?? previousEntry?.kg ?? MIN_WEIGHT_KG;
-      return clampWeight(base + step);
-    });
-  }
+  const canSave = parsedWeightKg !== null && !isOutOfRange;
 
   async function handleSave() {
-    if (draftWeightKg === null || isSaving) {
+    if (parsedWeightKg === null || isOutOfRange || isSaving) {
       return;
     }
 
     setIsSaving(true);
     try {
-      await onSave(draftWeightKg);
+      await onSave(roundTo(parsedWeightKg, 1));
       onOpenChange(false);
     } finally {
       setIsSaving(false);
@@ -117,9 +142,15 @@ export function WeightEntrySheet({
     <BottomSheet
       onOpenChange={onOpenChange}
       open={open}
-      title={todayWeightKg === null ? "Unesi danasnju tezinu" : "Izmeni danasnju tezinu"}
+      title={todayWeightKg === null ? "Unesi jutarnju tezinu" : "Izmeni jutarnju tezinu"}
     >
       <View className="gap-4">
+        <InfoCallout
+          description="Meri se odmah po budjenju, posle toaleta, pre hrane i vode. Tako je trend najcistiji."
+          title="Najtacnije merenje"
+          tone="warning"
+        />
+
         <Card className="gap-2">
           <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
             {getReferenceLabel(previousEntry, today)}
@@ -131,44 +162,34 @@ export function WeightEntrySheet({
             {previousEntry ? formatWeightKg(previousEntry.kg) : "-"}
           </Text>
           <Text className="text-sm leading-6 text-muted">
-            Ovaj unos se cuva samo za datum {today}.
+            Ovaj unos cuvamo kao jutarnju tezinu za datum {today}.
           </Text>
         </Card>
 
-        <Card className="items-center gap-3 border-warning bg-surface-strong py-6">
-          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
-            Trenutni draft
+        <Card className="gap-3 border-warning bg-surface-strong px-5 py-6">
+          <Text className="text-center text-xs font-semibold uppercase tracking-[1.8px] text-warning">
+            Jutarnja tezina
           </Text>
-          <Text
-            className="text-[44px] font-black text-text"
-            style={{ fontVariant: ["tabular-nums"] }}
-          >
-            {draftWeightKg === null ? "-" : formatWeightKg(draftWeightKg)}
-          </Text>
-          <Text className="text-sm text-muted">
-            Podesi tezinu sitnim ili krupnim koracima.
+          <View className="flex-row items-end justify-center gap-3">
+            <TextInput
+              autoFocus
+              className="min-w-[168px] border-b border-warning pb-2 text-center text-[44px] font-black text-text"
+              inputMode="decimal"
+              keyboardType="decimal-pad"
+              onChangeText={(value) => setDraftInput(normalizeWeightInput(value))}
+              placeholder="0.0"
+              placeholderTextColor="#6F7A90"
+              selectTextOnFocus
+              value={draftInput}
+            />
+            <Text className="pb-3 text-lg font-bold text-muted-strong">kg</Text>
+          </View>
+          <Text className="text-center text-sm leading-6 text-muted">
+            {isOutOfRange
+              ? `Unesi broj izmedju ${MIN_WEIGHT_KG} i ${MAX_WEIGHT_KG} kg.`
+              : "Upisi tezinu direktno. Cuvamo vrednost sa jednom decimalom."}
           </Text>
         </Card>
-
-        <View className="gap-3">
-          <Text className="text-sm font-semibold uppercase tracking-[1.8px] text-muted">
-            Fini korak
-          </Text>
-          <View className="flex-row gap-2">
-            <ActionPill label="-0.1" onPress={() => nudgeDraft(-FINE_STEP)} />
-            <ActionPill label="+0.1" onPress={() => nudgeDraft(FINE_STEP)} variant="accent" />
-          </View>
-        </View>
-
-        <View className="gap-3">
-          <Text className="text-sm font-semibold uppercase tracking-[1.8px] text-muted">
-            Grubi korak
-          </Text>
-          <View className="flex-row gap-2">
-            <ActionPill label="-1.0" onPress={() => nudgeDraft(-COARSE_STEP)} />
-            <ActionPill label="+1.0" onPress={() => nudgeDraft(COARSE_STEP)} variant="accent" />
-          </View>
-        </View>
 
         <Card
           className={
@@ -202,7 +223,7 @@ export function WeightEntrySheet({
         <View className="gap-3 pt-1">
           <PrimaryButton
             disabled={!canSave}
-            label={todayWeightKg === null ? "Sacuvaj danasnju tezinu" : "Sacuvaj izmenu"}
+            label={todayWeightKg === null ? "Sacuvaj jutarnju tezinu" : "Sacuvaj izmenu"}
             loading={isSaving}
             onPress={() => {
               void handleSave();

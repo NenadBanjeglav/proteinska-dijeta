@@ -11,6 +11,7 @@ type ProgressMetricCardProps = {
   progress: number;
   valueLabel: string;
   targetLabel: string;
+  captionLabel?: string;
   percentLabel: string;
   tone: ProgressMetricCardTone;
 };
@@ -35,6 +36,7 @@ export function ProgressMetricCard({
   progress,
   valueLabel,
   targetLabel,
+  captionLabel,
   percentLabel,
   tone,
 }: ProgressMetricCardProps) {
@@ -62,6 +64,11 @@ export function ProgressMetricCard({
           {valueLabel}
         </Text>
         <Text className="text-sm text-muted">{targetLabel}</Text>
+        {captionLabel ? (
+          <Text className="text-center text-xs uppercase tracking-[1.4px] text-muted">
+            {captionLabel}
+          </Text>
+        ) : null}
       </View>
     </Card>
   );

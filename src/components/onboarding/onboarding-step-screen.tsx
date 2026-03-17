@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PrimaryButton } from "@/src/components/ui/primary-button";
 import { StepHeader } from "@/src/components/onboarding/step-header";
+import { ONBOARDING_STEP_COUNT } from "@/src/lib/onboarding";
 
 type OnboardingStepScreenProps = PropsWithChildren<{
   step: number;
@@ -19,6 +20,7 @@ type OnboardingStepScreenProps = PropsWithChildren<{
   onBackPress?: () => void;
   progressLabel?: string;
   showHeader?: boolean;
+  stepCount?: number;
 }>;
 
 export function OnboardingStepScreen({
@@ -36,6 +38,7 @@ export function OnboardingStepScreen({
   onBackPress,
   progressLabel,
   showHeader = true,
+  stepCount = ONBOARDING_STEP_COUNT,
 }: OnboardingStepScreenProps) {
   const progressStep = Math.max(0, step - 1);
 
@@ -55,7 +58,7 @@ export function OnboardingStepScreen({
               progressLabel={progressLabel}
               progressStep={progressStep}
               title={title}
-              total={7}
+              total={Math.max(1, stepCount - 1)}
             />
           ) : null}
 

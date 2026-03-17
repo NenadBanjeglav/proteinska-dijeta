@@ -1,10 +1,17 @@
-import type { GoalType, ProtocolCategory } from "@/src/types/app";
+import type { GoalType, MealSupplementKey } from "@/src/types/app";
 
 export const GOAL_DAYS: Record<GoalType, number> = {
   kickstart: 14,
   plateau: 14,
   event: 21,
   full: 35,
+};
+
+export const GOAL_LABELS: Record<GoalType, string> = {
+  kickstart: "Pokretanje dijete",
+  plateau: "Probijanje platoa",
+  event: "Priprema za dogadjaj",
+  full: "Puna faza mrsavljenja",
 };
 
 export const SUPPLEMENT_GUIDANCE = [
@@ -24,31 +31,40 @@ export const SUPPLEMENT_CHECKLIST = [
   "Kalijumova so - soli po ukusu",
 ] as const;
 
-export const PROTOCOL_GUIDANCE: Record<
-  ProtocolCategory,
+export const MEAL_SUPPLEMENT_DEFINITIONS: {
+  key: MealSupplementKey;
+  label: string;
+  description: string;
+  dailyLimit: number | null;
+}[] = [
   {
-    mainStretch: string;
-    freeMeals: string;
-    refeed: string;
-    postStretch: string;
-  }
-> = {
-  1: {
-    mainStretch: "11-12 dana",
-    freeMeals: "Bez redovnih free meal obroka",
-    refeed: "2-3 high-carb dana na kraju",
-    postStretch: "Povratak na normalniji rezim dijete",
+    key: "omega3WithMeal",
+    label: "Omega-3",
+    description: "2 g uz ovaj obrok",
+    dailyLimit: null,
   },
-  2: {
-    mainStretch: "2-6 nedelja",
-    freeMeals: "1 free meal nedeljno",
-    refeed: "Jedan 5-casovni refeed nedeljno",
-    postStretch: "2 nedelje diet break",
+  {
+    key: "potassiumSalted",
+    label: "Kalijumova so",
+    description: "Posoljeno uz ovaj obrok",
+    dailyLimit: null,
   },
-  3: {
-    mainStretch: "6-12 nedelja",
-    freeMeals: "2 free meal obroka nedeljno",
-    refeed: "Bez strukturiranog refeed-a",
-    postStretch: "2 nedelje diet break",
+  {
+    key: "multivitamin",
+    label: "Multivitamin",
+    description: "1 dnevno",
+    dailyLimit: 1,
   },
-};
+  {
+    key: "calcium",
+    label: "Kalcijum",
+    description: "Do 2 dnevno",
+    dailyLimit: 2,
+  },
+  {
+    key: "magnesium",
+    label: "Magnezijum",
+    description: "1 dnevno",
+    dailyLimit: 1,
+  },
+] as const;

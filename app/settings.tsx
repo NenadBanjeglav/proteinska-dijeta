@@ -1,21 +1,50 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { router, Stack } from "expo-router";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 
 import { Card } from "@/src/components/ui/card";
 import { HeaderActionButton } from "@/src/components/ui/header-action-button";
+import { PrimaryButton } from "@/src/components/ui/primary-button";
 import { Screen } from "@/src/components/ui/screen";
+import {
+  formatNumberInput,
+  isGoalWeightValid,
+  parseNumberInput,
+} from "@/src/lib/onboarding";
+import { roundTo } from "@/src/lib/units";
 import { usePsmfStore } from "@/src/store/psmf-store";
+import { selectCurrentWeightKg } from "@/src/store/selectors";
 
 export default function SettingsRoute() {
   const data = usePsmfStore((store) => store.data);
   const clearStore = usePsmfStore((store) => store.clearStore);
+  const setGoalWeightKg = usePsmfStore((store) => store.setGoalWeightKg);
   const [isResetting, setIsResetting] = useState(false);
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const [draftGoalWeight, setDraftGoalWeight] = useState(
+    formatNumberInput(data.goalWeightKg, 1),
+  );
   const appName = Constants.expoConfig?.name ?? "Proteinska Dijeta";
   const appVersion = Constants.expoConfig?.version ?? "0.1.0";
   const waterDays = Object.keys(data.waterGlassesByDate).length;
+  const currentWeightKg = selectCurrentWeightKg(data);
+  const parsedGoalWeight = parseNumberInput(draftGoalWeight);
+  const canSaveGoal = isGoalWeightValid(currentWeightKg, parsedGoalWeight);
+  const goalChanged =
+    parsedGoalWeight !== null && roundTo(parsedGoalWeight, 1) !== data.goalWeightKg;
+  const goalSummary = useMemo(() => {
+    if (data.goalWeightKg === null) {
+      return "Jos nije uneta";
+    }
+
+    return `${formatNumberInput(data.goalWeightKg, 1)} kg`;
+  }, [data.goalWeightKg]);
+
+  useEffect(() => {
+    setDraftGoalWeight(formatNumberInput(data.goalWeightKg, 1));
+  }, [data.goalWeightKg]);
 
   function handleResetPress() {
     if (isResetting) {
@@ -45,6 +74,17 @@ export default function SettingsRoute() {
     );
   }
 
+  function handleSaveGoalWeight() {
+    if (!canSaveGoal || parsedGoalWeight === null || isSavingGoal) {
+      return;
+    }
+
+    setIsSavingGoal(true);
+    void setGoalWeightKg(roundTo(parsedGoalWeight, 1)).finally(() => {
+      setIsSavingGoal(false);
+    });
+  }
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false, animation: "slide_from_right" }} />
@@ -66,6 +106,49 @@ export default function SettingsRoute() {
             onPress={() => router.back()}
           />
         </View>
+
+        <Card className="gap-3 border-warning/30 bg-surface">
+          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
+            Ciljna tezina
+          </Text>
+          <View className="gap-1">
+            <Text className="text-2xl font-black text-text">{goalSummary}</Text>
+            <Text className="text-sm leading-6 text-muted">
+              {currentWeightKg === null
+                ? "Ciljnu tezinu mozemo da sacuvamo cim postoji trenutna tezina u planu."
+                : `Trenutna tezina za poredjenje: ${formatNumberInput(currentWeightKg, 1)} kg`}
+            </Text>
+          </View>
+
+          <TextInput
+            className="rounded-3xl bg-surface-soft px-5 py-4 text-2xl font-bold text-text"
+            keyboardType="decimal-pad"
+            onChangeText={setDraftGoalWeight}
+            placeholder="Unesi ciljnu tezinu"
+            placeholderTextColor="#64748B"
+            value={draftGoalWeight}
+          />
+
+          {currentWeightKg !== null &&
+          parsedGoalWeight !== null &&
+          parsedGoalWeight >= currentWeightKg ? (
+            <Text className="text-sm leading-6 text-danger">
+              Ciljna tezina mora da bude niza od trenutne da bi projekcija imala smisla.
+            </Text>
+          ) : (
+            <Text className="text-sm leading-6 text-muted">
+              Menjanjem ciljne tezine odmah menjas i live projekciju na pocetnoj i progress ekranu.
+            </Text>
+          )}
+
+          <PrimaryButton
+            disabled={!canSaveGoal || !goalChanged || isSavingGoal}
+            label={data.goalWeightKg === null ? "Sacuvaj ciljnu tezinu" : "Azuriraj ciljnu tezinu"}
+            loading={isSavingGoal}
+            onPress={handleSaveGoalWeight}
+            variant="secondary"
+          />
+        </Card>
 
         <Card className="gap-3">
           <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">

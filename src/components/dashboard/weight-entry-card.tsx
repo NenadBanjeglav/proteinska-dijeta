@@ -20,7 +20,8 @@ export function WeightEntryCard({
   onPress,
 }: WeightEntryCardProps) {
   const deltaTone = getWeightDeltaTone(deltaKg);
-  const ctaLabel = todayWeightKg === null ? "Unesi danasnju tezinu" : "Izmeni danasnju tezinu";
+  const ctaLabel =
+    todayWeightKg === null ? "Unesi jutarnju tezinu" : "Izmeni jutarnju tezinu";
 
   return (
     <Card className="flex-row items-center justify-between gap-4 px-4 py-4">
@@ -31,7 +32,7 @@ export function WeightEntryCard({
 
         <View className="min-w-0 flex-1 gap-1">
           <Text className="text-xl font-bold text-text" numberOfLines={2}>
-            {todayWeightKg === null ? "Unesi danasnju tezinu" : "Danasnja tezina"}
+            {todayWeightKg === null ? "Unesi jutarnju tezinu" : "Jutarnja tezina"}
           </Text>
           <Text
             className={
@@ -42,7 +43,9 @@ export function WeightEntryCard({
                   : "text-sm text-muted"
             }
           >
-            {todayWeightKg === null ? "Nije uneseno" : getWeightDeltaLabel(deltaKg)}
+            {todayWeightKg === null
+              ? "Najtacnije odmah po budjenju, posle toaleta."
+              : getWeightDeltaLabel(deltaKg)}
           </Text>
         </View>
       </View>

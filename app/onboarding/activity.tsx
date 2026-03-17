@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 
+import { GoalProjectionCard } from "@/src/components/projection/goal-projection-card";
 import { InfoCallout } from "@/src/components/onboarding/info-callout";
 import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { SelectionCard } from "@/src/components/onboarding/selection-card";
 import { Card } from "@/src/components/ui/card";
 import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
 import {
-  buildProteinPreview,
+  buildOnboardingPreview,
   formatProteinMultiplierLabel,
   formatProteinRangeLabel,
   isProteinRangeFixed,
@@ -19,7 +20,7 @@ export default function ActivityRoute() {
   const [draftActivity, setDraftActivity] = useState<Activity | null>(state.activity);
 
   useEffect(() => {
-    syncStep(6);
+    syncStep(5);
   }, [syncStep]);
 
   useEffect(() => {
@@ -29,25 +30,33 @@ export default function ActivityRoute() {
   const preview =
     draftActivity === null
       ? null
-      : buildProteinPreview({ ...state, activity: draftActivity });
-  const hasFixedRange = preview ? isProteinRangeFixed(preview.proteinRange) : false;
-  const rangeLabel = preview ? formatProteinRangeLabel(preview.proteinRange) : null;
-  const multiplierLabel = preview
-    ? formatProteinMultiplierLabel(preview.proteinMultiplier)
+      : buildOnboardingPreview({ ...state, activity: draftActivity });
+  const proteinPreview = preview;
+  const hasFixedRange =
+    proteinPreview ? isProteinRangeFixed(proteinPreview.proteinRange) : false;
+  const rangeLabel = proteinPreview
+    ? formatProteinRangeLabel(proteinPreview.proteinRange)
     : null;
+  const multiplierLabel = proteinPreview
+    ? formatProteinMultiplierLabel(proteinPreview.proteinMultiplier)
+    : null;
+  const canContinue =
+    draftActivity !== null &&
+    preview !== null &&
+    preview.projection.status !== "invalid";
 
   return (
     <OnboardingStepScreen
-      description="Nivo aktivnosti menja proteinski multiplikator i direktno utice na dnevni cilj."
+      description="Nivo aktivnosti menja proteinski multiplikator i kalorijski minus, pa tek ovde dobijamo prvu ozbiljnu procenu."
       onPrimaryPress={() => {
-        if (draftActivity) {
+        if (draftActivity && canContinue) {
           commitStep({ activity: draftActivity });
         }
       }}
       onBackPress={goBack}
-      primaryDisabled={draftActivity === null}
-      primaryLabel="Nastavi"
-      step={6}
+      primaryDisabled={!canContinue}
+      primaryLabel="Pregledaj plan"
+      step={5}
       title="Nivo aktivnosti"
     >
       <SelectionCard
@@ -69,18 +78,29 @@ export default function ActivityRoute() {
         title="Trening sa tegovima"
       />
 
-      {preview ? (
+      {proteinPreview ? (
         <Card className="gap-3 border-warning bg-surface-strong">
-          <Text className="text-sm font-semibold uppercase tracking-[2px] text-warning">
-            Pregled cilja
-          </Text>
-          <Text className="text-4xl font-black text-text">
-            {preview.proteinTargetG} g
-          </Text>
-          <Text className="text-base font-semibold text-text">
-            Kategorija {preview.category}
-          </Text>
+          <View className="flex-row items-start justify-between gap-4">
+            <View className="flex-1 gap-1">
+              <Text className="text-sm font-semibold uppercase tracking-[2px] text-warning">
+                Dnevni cilj proteina
+              </Text>
+              <Text className="text-4xl font-black text-text">
+                {proteinPreview.proteinTargetG} g
+              </Text>
+            </View>
+            <View className="items-end gap-1">
+              <Text className="text-sm text-muted">Kategorija</Text>
+              <Text className="text-2xl font-black text-text">
+                {proteinPreview.category}
+              </Text>
+            </View>
+          </View>
           <Text className="text-base leading-6 text-muted-strong">
+            Oko {proteinPreview.estimatedCalories} kcal dnevno - nemasna masa{" "}
+            {proteinPreview.leanBodyMassKg} kg / {proteinPreview.leanBodyMassLbs} lb
+          </Text>
+          <Text className="text-sm leading-6 text-muted-strong">
             {hasFixedRange
               ? `Fiksni multiplikator ${multiplierLabel}`
               : `Preporuceni raspon je ${rangeLabel}, a tvoj multiplikator ${multiplierLabel}`}
@@ -88,13 +108,18 @@ export default function ActivityRoute() {
         </Card>
       ) : null}
 
+      {preview ? (
+        <GoalProjectionCard
+          description="Procena pretpostavlja strogi PSMF bez planiranih pauza i azurira se kasnije po tvojoj stvarnoj tezini."
+          eyebrow="Procena puta do cilja"
+          projection={preview.projection}
+          title="Koliko traje do ciljne tezine"
+        />
+      ) : null}
+
       <InfoCallout
-        description={
-          preview && !hasFixedRange
-            ? "Ako si u kategoriji 1, nizi procenat masti pomera cilj ka gornjoj granici preporucenog raspona."
-            : "U kategorijama 2 i 3 multiplikator je fiksan za izabrani nivo aktivnosti."
-        }
-        title="Kako da citas ovaj prikaz"
+        description="Ako menjas aktivnost, menjaju se i protein cilj i procena trajanja. Zato je ovo glavni trenutak kada plan dobija smisao."
+        title="Kako da citas ovo"
       />
     </OnboardingStepScreen>
   );

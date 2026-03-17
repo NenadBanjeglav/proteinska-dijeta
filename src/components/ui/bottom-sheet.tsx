@@ -17,6 +17,7 @@ type BottomSheetProps = {
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
   title?: string;
+  footer?: React.ReactNode;
 };
 
 const easeOut: EasingFunction = (value) => 1 - (1 - value) * (1 - value);
@@ -26,12 +27,16 @@ export function BottomSheet({
   onOpenChange,
   children,
   title,
+  footer,
 }: BottomSheetProps) {
   const translateY = useRef(new Animated.Value(32)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const [visible, setVisible] = useState(open);
   const { height } = useWindowDimensions();
   const maxContentHeight = Math.min(height * 0.78, 680);
+  const maxScrollHeight = footer
+    ? Math.max(180, maxContentHeight - 148)
+    : maxContentHeight;
 
   useEffect(() => {
     if (open) {
@@ -102,10 +107,13 @@ export function BottomSheet({
               contentContainerStyle={{ paddingBottom: 4 }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              style={{ maxHeight: maxContentHeight }}
+              style={{ maxHeight: maxScrollHeight }}
             >
               {children}
             </ScrollView>
+            {footer ? (
+              <View className="mt-4 border-t border-border pt-4">{footer}</View>
+            ) : null}
           </Card>
         </Animated.View>
       </View>

@@ -8,6 +8,8 @@ import {
   saveOnboardingProfile as persistOnboardingProfile,
   saveWeightEntry as persistWeightEntry,
   setWaterGlasses as persistWaterGlasses,
+  setGoalWeightKg as persistGoalWeightKg,
+  setDismissedProteinChangeKey as persistDismissedProteinChangeKey,
   deleteMeal as removeMeal,
 } from "@/src/store/storage";
 import type { LoggedMeal, OnboardingProfile, PSMFAppStore } from "@/src/types/app";
@@ -33,6 +35,16 @@ export const usePsmfStore = create<PSMFAppStore>((set, get) => ({
 
   saveOnboardingProfile: async (profile: OnboardingProfile) => {
     const data = await persistOnboardingProfile(profile);
+    set({ data });
+  },
+
+  setGoalWeightKg: async (goalWeightKg: number) => {
+    const data = await persistGoalWeightKg(goalWeightKg);
+    set({ data });
+  },
+
+  setDismissedProteinChangeKey: async (key: string | null) => {
+    const data = await persistDismissedProteinChangeKey(key);
     set({ data });
   },
 

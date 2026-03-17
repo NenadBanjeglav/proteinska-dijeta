@@ -1,47 +1,46 @@
-import { useEffect } from "react";
-import { Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Text, TextInput, View } from "react-native";
 
+import { GoalProjectionCard } from "@/src/components/projection/goal-projection-card";
 import { InfoCallout } from "@/src/components/onboarding/info-callout";
 import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { Card } from "@/src/components/ui/card";
 import { Chip } from "@/src/components/ui/chip";
-import { SUPPLEMENT_GUIDANCE } from "@/src/constants/protocol";
+import { GOAL_LABELS, SUPPLEMENT_CHECKLIST } from "@/src/constants/protocol";
 import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
-import {
-  formatProteinMultiplierLabel,
-  formatProteinRangeLabel,
-  isProteinRangeFixed,
-} from "@/src/lib/onboarding";
+import { calcWaterTargetGlasses } from "@/src/lib/psmf";
 
 export default function SummaryRoute() {
   const { state, syncStep, preview, confirm, goBack, isSubmitting } =
     useOnboardingWizard();
+  const [draftName, setDraftName] = useState(state.userName);
 
   useEffect(() => {
-    syncStep(8);
+    syncStep(6);
   }, [syncStep]);
 
-  const rangeLabel = preview ? formatProteinRangeLabel(preview.proteinRange) : null;
-  const multiplierLabel = preview
-    ? formatProteinMultiplierLabel(preview.proteinMultiplier)
-    : null;
-  const hasFixedRange = preview ? isProteinRangeFixed(preview.proteinRange) : false;
+  useEffect(() => {
+    setDraftName(state.userName);
+  }, [state.userName]);
+
+  const waterTarget =
+    state.weightKg === null ? null : calcWaterTargetGlasses(state.weightKg);
+  const canConfirm = !!preview && preview.projection.status !== "invalid";
 
   return (
     <OnboardingStepScreen
-      description="Plan je spreman. Pregledaj brojke i potvrdi pocetak."
+      description="Plan je spreman. Jos jednom pogledaj brojke, a ime unesi samo ako hoces licniji ton u aplikaciji."
       onPrimaryPress={() => {
-        void confirm();
+        void confirm({ userName: draftName });
       }}
       onBackPress={goBack}
-      primaryDisabled={!preview}
-      primaryLabel="Pocni PSMF danas"
+      primaryDisabled={!canConfirm}
+      primaryLabel="Pocni danas"
       primaryLoading={isSubmitting}
-      progressLabel="Gotovo!"
+      progressLabel="Gotovo"
       scroll
-      showBack={false}
-      step={8}
-      title="Rezime"
+      step={6}
+      title="Potvrda plana"
     >
       {preview ? (
         <>
@@ -55,66 +54,76 @@ export default function SummaryRoute() {
                   {preview.proteinTargetG} g
                 </Text>
               </View>
-              <Chip label={`Kategorija ${preview.category}`} variant="accent" />
+              <View className="items-end gap-2">
+                <Chip label={`Kategorija ${preview.category}`} variant="accent" />
+                <Chip label={GOAL_LABELS[state.goalType!]} variant="warning" />
+              </View>
             </View>
             <Text className="text-base leading-6 text-muted-strong">
-              Oko {preview.estimatedCalories} kcal dnevno - nemasna masa{" "}
-              {preview.leanBodyMassKg} kg / {preview.leanBodyMassLbs} lb
+              Oko {preview.estimatedCalories} kcal dnevno - ciljna tezina{" "}
+              {preview.goalWeightKg} kg
+            </Text>
+          </Card>
+
+          <GoalProjectionCard
+            description="Ovo je pocetna procena. Posle onboarding-a grafik ce se osvezavati po tvojoj stvarnoj jutarnjoj tezini."
+            eyebrow="Put do cilja"
+            projection={preview.projection}
+            title="Procena do ciljne tezine"
+          />
+
+          <Card className="gap-3">
+            <Text className="text-xs font-semibold uppercase tracking-[2px] text-muted">
+              Prvi dan
             </Text>
             <Text className="text-sm leading-6 text-muted-strong">
-              {hasFixedRange
-                ? `Fiksni multiplikator ${multiplierLabel}`
-                : `Tvoj multiplikator je ${multiplierLabel}, a preporuceni raspon ${rangeLabel}`}
+              - Pogodi {preview.proteinTargetG} g proteina.
             </Text>
-            {state.bodyFatMode === "bmi" && preview.bmi !== null ? (
-              <InfoCallout
-                description={`Koriscena je BMI procena (BMI ${preview.bmi}). Ako si misicav ili atletski gradjen, bolji izbor je rucni unos procenta masti.`}
-                tone="warning"
-              />
+            {waterTarget !== null ? (
+              <Text className="text-sm leading-6 text-muted-strong">
+                - Popij oko {waterTarget} casa vode.
+              </Text>
             ) : null}
-          </Card>
-
-          <Card className="gap-3">
-            <Text className="text-xs font-semibold uppercase tracking-[2px] text-muted">
-              Kako smo izracunali
+            <Text className="text-sm leading-6 text-muted-strong">
+              - Izmeri jutarnju tezinu odmah po budjenju, posle toaleta, pre hrane i vode.
             </Text>
-            <Text className="text-base leading-6 text-muted-strong">
-              Start tezina: {state.weightKg} kg
-            </Text>
-            <Text className="text-base leading-6 text-muted-strong">
-              Procena masti: {preview.bodyFatPct}%
-            </Text>
-            <Text className="text-base leading-6 text-muted-strong">
-              Kategorija: {preview.category}
-            </Text>
-            <Text className="text-base leading-6 text-muted-strong">
-              Trajanje plana: {preview.goalTotalDays} dana
-            </Text>
-          </Card>
-
-          <Card className="gap-3">
-            <Text className="text-xs font-semibold uppercase tracking-[2px] text-muted">
-              Sta uzimati svaki dan
-            </Text>
-            {SUPPLEMENT_GUIDANCE.map((item) => (
+            {SUPPLEMENT_CHECKLIST.map((item) => (
               <Text key={item} className="text-sm leading-6 text-muted-strong">
                 - {item}
               </Text>
             ))}
           </Card>
 
+          <Card className="gap-3">
+            <Text className="text-xs font-semibold uppercase tracking-[2px] text-muted">
+              Ime je opciono
+            </Text>
+            <TextInput
+              autoCapitalize="words"
+              autoCorrect={false}
+              className="rounded-3xl bg-surface-soft px-5 py-4 text-2xl font-bold text-text"
+              onChangeText={setDraftName}
+              placeholder="Upisi ime ili ostavi prazno"
+              placeholderTextColor="#64748B"
+              value={draftName}
+            />
+            <Text className="text-sm leading-6 text-muted">
+              Ako ostavis prazno, aplikacija ce koristiti neutralan pozdrav.
+            </Text>
+          </Card>
+
           <InfoCallout
-            description="Kada potvrdis, plan se cuva lokalno na telefonu. Sledeci put nastavljas odatle."
+            description="Kada potvrdis, cuvamo plan lokalno na telefonu. Ciljna tezina moze kasnije da se menja iz podesavanja."
             title="Posle potvrde"
           />
         </>
       ) : (
         <Card className="gap-2 border-danger bg-surface-soft">
           <Text className="text-base font-bold text-danger">
-            Rezime jos nije spreman.
+            Plan jos nije spreman.
           </Text>
           <Text className="text-sm leading-6 text-muted">
-            Vrati se na prethodne korake i dovrsi podatke pre potvrde.
+            Vrati se korak nazad i proveri procenat masti, aktivnost ili ciljnu tezinu.
           </Text>
         </Card>
       )}

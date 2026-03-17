@@ -18,6 +18,12 @@ export function parseDateKey(dateKey: string) {
   return new Date(`${dateKey}T00:00:00`);
 }
 
+export function addDays(dateKey: string, days: number) {
+  const next = parseDateKey(dateKey);
+  next.setDate(next.getDate() + days);
+  return toDateKey(next);
+}
+
 export function getDaysBetween(startDate: string, endDate: string) {
   const start = parseDateKey(startDate).getTime();
   const end = parseDateKey(endDate).getTime();

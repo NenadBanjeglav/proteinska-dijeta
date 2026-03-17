@@ -1,5 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import {
+  createEmptyMealSupplements,
+  getMealSupplements,
+} from "@/src/lib/meals";
 import { sortWeightHistory } from "@/src/lib/date";
 import type {
   Activity,
@@ -8,6 +12,7 @@ import type {
   LoggedMeal,
   LoggedMealItemKind,
   LoggedMealItem,
+  MealSupplements,
   OnboardingProfile,
   PSMFStore,
   WeightEntry,
@@ -24,7 +29,9 @@ export const DEFAULT_STORE: PSMFStore = {
   userName: null,
   startDate: null,
   startingWeightKg: null,
+  goalWeightKg: null,
   proteinTargetG: null,
+  dismissedProteinChangeKey: null,
   gender: null,
   bodyFatPct: null,
   activity: null,
@@ -58,6 +65,29 @@ function isString(value: unknown): value is string {
 
 function isDefined<T>(value: T | null): value is T {
   return value !== null;
+}
+
+function ensureStartWeightEntry(
+  weightHistory: WeightEntry[],
+  startDate: string | null,
+  startingWeightKg: number | null,
+) {
+  if (!startDate || !isNumber(startingWeightKg)) {
+    return sortWeightHistory(weightHistory);
+  }
+
+  const hasStartEntry = weightHistory.some((entry) => entry.date === startDate);
+  if (hasStartEntry) {
+    return sortWeightHistory(weightHistory);
+  }
+
+  return sortWeightHistory([
+    ...weightHistory,
+    {
+      date: startDate,
+      kg: startingWeightKg,
+    },
+  ]);
 }
 
 function parseWeightEntry(value: unknown): WeightEntry | null {
@@ -94,6 +124,21 @@ function parseMealItem(value: unknown): LoggedMealItem | null {
   };
 }
 
+function parseMealSupplements(value: unknown): MealSupplements {
+  if (!isRecord(value)) {
+    return createEmptyMealSupplements();
+  }
+
+  return {
+    ...createEmptyMealSupplements(),
+    omega3WithMeal: value.omega3WithMeal === true,
+    potassiumSalted: value.potassiumSalted === true,
+    multivitamin: value.multivitamin === true,
+    calcium: value.calcium === true,
+    magnesium: value.magnesium === true,
+  };
+}
+
 function parseMeal(value: unknown): LoggedMeal | null {
   if (!isRecord(value) || !isString(value.id) || !isString(value.name) || !isString(value.date)) {
     return null;
@@ -111,6 +156,7 @@ function parseMeal(value: unknown): LoggedMeal | null {
     id: value.id,
     name: value.name,
     items,
+    supplements: parseMealSupplements(value.supplements),
     proteinG: value.proteinG,
     calories: value.calories,
     date: value.date,
@@ -129,6 +175,10 @@ function sanitizeStore(value: unknown): PSMFStore {
   const meals = Array.isArray(value.meals)
     ? value.meals.map(parseMeal).filter(isDefined)
     : [];
+  const startDate = isString(value.startDate) ? value.startDate : null;
+  const startingWeightKg = isNumber(value.startingWeightKg)
+    ? value.startingWeightKg
+    : null;
   const waterGlassesByDate = isRecord(value.waterGlassesByDate)
     ? Object.entries(value.waterGlassesByDate).reduce<Record<string, number>>(
         (accumulator, [key, count]) => {
@@ -144,15 +194,19 @@ function sanitizeStore(value: unknown): PSMFStore {
   return {
     ...fallback,
     userName: isString(value.userName) ? value.userName : null,
-    startDate: isString(value.startDate) ? value.startDate : null,
-    startingWeightKg: isNumber(value.startingWeightKg) ? value.startingWeightKg : null,
+    startDate,
+    startingWeightKg,
+    goalWeightKg: isNumber(value.goalWeightKg) ? value.goalWeightKg : null,
     proteinTargetG: isNumber(value.proteinTargetG) ? value.proteinTargetG : null,
+    dismissedProteinChangeKey: isString(value.dismissedProteinChangeKey)
+      ? value.dismissedProteinChangeKey
+      : null,
     gender: GENDERS.has(value.gender as Gender) ? (value.gender as Gender) : null,
     bodyFatPct: isNumber(value.bodyFatPct) ? value.bodyFatPct : null,
     activity: ACTIVITIES.has(value.activity as Activity) ? (value.activity as Activity) : null,
     goalType: GOALS.has(value.goalType as GoalType) ? (value.goalType as GoalType) : null,
     goalTotalDays: isNumber(value.goalTotalDays) ? value.goalTotalDays : null,
-    weightHistory: sortWeightHistory(weightHistory),
+    weightHistory: ensureStartWeightEntry(weightHistory, startDate, startingWeightKg),
     meals,
     waterGlassesByDate,
   };
@@ -182,66 +236,45 @@ export async function getStore() {
   }
 }
 
-export async function setUserName(name: string) {
-  return updateStore((store) => ({ ...store, userName: name.trim() || null }));
-}
-
-export async function getUserName() {
-  const store = await getStore();
-  return store.userName;
-}
-
-export async function setStartingWeight(kg: number) {
-  return updateStore((store) => ({ ...store, startingWeightKg: kg }));
-}
-
-export async function setProteinTarget(proteinTargetG: number) {
-  return updateStore((store) => ({ ...store, proteinTargetG }));
-}
-
 export async function saveOnboardingProfile(profile: OnboardingProfile) {
+  return updateStore((store) => {
+    const nextStartDate = profile.startDate;
+    const nextStartingWeightKg = profile.startingWeightKg;
+
+    return {
+      ...store,
+      userName: profile.userName,
+      startDate: nextStartDate,
+      startingWeightKg: nextStartingWeightKg,
+      goalWeightKg: profile.goalWeightKg,
+      proteinTargetG: profile.proteinTargetG,
+      dismissedProteinChangeKey: null,
+      gender: profile.gender,
+      bodyFatPct: profile.bodyFatPct,
+      activity: profile.activity,
+      goalType: profile.goalType,
+      goalTotalDays: profile.goalTotalDays,
+      weightHistory: ensureStartWeightEntry(
+        store.weightHistory,
+        nextStartDate,
+        nextStartingWeightKg,
+      ),
+    };
+  });
+}
+
+export async function setGoalWeightKg(goalWeightKg: number) {
   return updateStore((store) => ({
     ...store,
-    userName: profile.userName,
-    startDate: profile.startDate,
-    startingWeightKg: profile.startingWeightKg,
-    proteinTargetG: profile.proteinTargetG,
-    gender: profile.gender,
-    bodyFatPct: profile.bodyFatPct,
-    activity: profile.activity,
-    goalType: profile.goalType,
-    goalTotalDays: profile.goalTotalDays,
+    goalWeightKg,
   }));
 }
 
-export async function getOnboardingProfile(): Promise<OnboardingProfile | null> {
-  const store = await getStore();
-
-  if (
-    !store.userName ||
-    !store.startDate ||
-    store.startingWeightKg === null ||
-    store.proteinTargetG === null ||
-    !store.gender ||
-    store.bodyFatPct === null ||
-    !store.activity ||
-    !store.goalType ||
-    store.goalTotalDays === null
-  ) {
-    return null;
-  }
-
-  return {
-    userName: store.userName,
-    startDate: store.startDate,
-    startingWeightKg: store.startingWeightKg,
-    proteinTargetG: store.proteinTargetG,
-    gender: store.gender,
-    bodyFatPct: store.bodyFatPct,
-    activity: store.activity,
-    goalType: store.goalType,
-    goalTotalDays: store.goalTotalDays,
-  };
+export async function setDismissedProteinChangeKey(key: string | null) {
+  return updateStore((store) => ({
+    ...store,
+    dismissedProteinChangeKey: key,
+  }));
 }
 
 export async function saveWeightEntry(kg: number, date: string) {
@@ -251,35 +284,17 @@ export async function saveWeightEntry(kg: number, date: string) {
   });
 }
 
-export async function getTodayEntry(date: string) {
-  const store = await getStore();
-  return store.weightHistory.find((entry) => entry.date === date) ?? null;
-}
-
-export async function getPreviousEntry(date: string) {
-  const store = await getStore();
-  const previous = [...store.weightHistory]
-    .filter((entry) => entry.date < date)
-    .sort((left, right) => right.date.localeCompare(left.date))[0];
-
-  if (previous) {
-    return previous;
-  }
-
-  if (store.startingWeightKg !== null) {
-    return {
-      date: store.startDate ?? date,
-      kg: store.startingWeightKg,
-    };
-  }
-
-  return null;
-}
-
 export async function saveMeal(meal: LoggedMeal) {
   return updateStore((store) => {
+    const nextMeal = {
+      ...meal,
+      supplements: getMealSupplements(meal),
+    };
     const meals = store.meals.filter((entry) => entry.id !== meal.id);
-    return { ...store, meals: [...meals, meal].sort((left, right) => left.date.localeCompare(right.date)) };
+    return {
+      ...store,
+      meals: [...meals, nextMeal].sort((left, right) => left.date.localeCompare(right.date)),
+    };
   });
 }
 
@@ -290,11 +305,6 @@ export async function deleteMeal(mealId: string) {
   }));
 }
 
-export async function getMealsByDate(date: string) {
-  const store = await getStore();
-  return store.meals.filter((meal) => meal.date === date);
-}
-
 export async function setWaterGlasses(date: string, count: number) {
   return updateStore((store) => ({
     ...store,
@@ -303,11 +313,6 @@ export async function setWaterGlasses(date: string, count: number) {
       [date]: Math.max(0, Math.round(count)),
     },
   }));
-}
-
-export async function getWaterGlasses(date: string) {
-  const store = await getStore();
-  return store.waterGlassesByDate[date] ?? 0;
 }
 
 export async function clearStore() {

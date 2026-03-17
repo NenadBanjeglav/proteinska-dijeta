@@ -1,7 +1,6 @@
-import { Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Text, TextInput, View } from "react-native";
 
-import { ActionPill } from "@/src/components/dashboard/action-pill";
-import { GramsStepper } from "@/src/components/dashboard/grams-stepper";
 import { BottomSheet } from "@/src/components/ui/bottom-sheet";
 import { Card } from "@/src/components/ui/card";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
@@ -12,45 +11,65 @@ type FoodAmountSheetProps = {
   onOpenChange: (open: boolean) => void;
   kind: FoodKind | null;
   foodLabel: string | null;
-  grams: number;
-  onChange: (grams: number) => void;
+  initialGrams: number | null;
+  onSave: (grams: number) => void;
 };
+
+const MAX_GRAMS = 2000;
 
 const CONFIG = {
   protein: {
     title: "Kolicina proteina",
-    description: "Podesi grame odmah da kasnije ne trazis kolicinu po ekranu.",
-    min: 50,
-    fineStep: 10,
-    coarseStep: 50,
-    quickValues: [100, 150, 200, 250],
+    description: "Unesi grame direktno za ovaj proteinski izvor.",
   },
   vegetable: {
     title: "Kolicina povrca",
-    description: "Povrce prilagodi obroku, a skrobnije opcije drzi umerenim.",
-    min: 25,
-    fineStep: 25,
-    coarseStep: 100,
-    quickValues: [100, 200, 300, 400],
+    description: "Unesi grame direktno za ovo povrce.",
   },
   condiment: {
-    title: "Kolicina condimenta",
-    description: "Dodaci su tu zbog ukusa, zato ih drzi u manjim kolicinama.",
-    min: 5,
-    fineStep: 5,
-    coarseStep: 20,
-    quickValues: [10, 20, 30, 40],
+    title: "Kolicina dodatka",
+    description: "Unesi grame direktno za ovaj dozvoljeni dodatak.",
   },
 } as const;
+
+function normalizeGramsInput(value: string) {
+  return value.replace(/[^0-9]/g, "").slice(0, 4);
+}
+
+function parseGramsInput(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.round(parsed);
+}
 
 export function FoodAmountSheet({
   open,
   onOpenChange,
   kind,
   foodLabel,
-  grams,
-  onChange,
+  initialGrams,
+  onSave,
 }: FoodAmountSheetProps) {
+  const [draftInput, setDraftInput] = useState(initialGrams ? String(initialGrams) : "");
+  const parsedGrams = parseGramsInput(draftInput);
+  const isOutOfRange = parsedGrams !== null && (parsedGrams <= 0 || parsedGrams > MAX_GRAMS);
+  const canSave = parsedGrams !== null && !isOutOfRange;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setDraftInput(initialGrams ? String(initialGrams) : "");
+  }, [initialGrams, open]);
+
   if (!kind || !foodLabel) {
     return null;
   }
@@ -64,47 +83,50 @@ export function FoodAmountSheet({
       title={`${config.title} - ${foodLabel}`}
     >
       <View className="gap-4">
-        <Card className="items-center gap-2 border-warning bg-surface-strong py-5">
-          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
-            Trenutno izabrano
+        <Card className="gap-3 border-warning bg-surface-strong px-5 py-6">
+          <Text className="text-center text-xs font-semibold uppercase tracking-[1.8px] text-warning">
+            Kolicina u gramima
           </Text>
-          <Text
-            className="text-[42px] font-black text-text"
-            style={{ fontVariant: ["tabular-nums"] }}
-          >
-            {grams}g
-          </Text>
+          <View className="flex-row items-end justify-center gap-3">
+            <TextInput
+              autoFocus
+              className="min-w-[168px] border-b border-warning pb-2 text-center text-[42px] font-black text-text"
+              inputMode="numeric"
+              keyboardType="number-pad"
+              onChangeText={(value) => setDraftInput(normalizeGramsInput(value))}
+              placeholder="0"
+              placeholderTextColor="#6F7A90"
+              selectTextOnFocus
+              value={draftInput}
+            />
+            <Text className="pb-3 text-lg font-bold text-muted-strong">g</Text>
+          </View>
           <Text className="text-center text-sm leading-6 text-muted">
-            {config.description}
+            {isOutOfRange
+              ? `Unesi broj izmedju 1 i ${MAX_GRAMS} g.`
+              : config.description}
           </Text>
         </Card>
 
-        <View className="gap-3">
-          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
-            Brzi izbor
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {config.quickValues.map((value) => (
-              <ActionPill
-                key={value}
-                label={`${value}g`}
-                onPress={() => onChange(value)}
-                variant={grams === value ? "accent" : "muted"}
-              />
-            ))}
-          </View>
+        <View className="gap-3 pt-1">
+          <PrimaryButton
+            disabled={!canSave}
+            label="Sacuvaj kolicinu"
+            onPress={() => {
+              if (parsedGrams === null || isOutOfRange) {
+                return;
+              }
+
+              onSave(parsedGrams);
+              onOpenChange(false);
+            }}
+          />
+          <PrimaryButton
+            label="Odustani"
+            onPress={() => onOpenChange(false)}
+            variant="ghost"
+          />
         </View>
-
-        <GramsStepper
-          coarseStep={config.coarseStep}
-          fineStep={config.fineStep}
-          label={config.title}
-          min={config.min}
-          onChange={onChange}
-          value={grams}
-        />
-
-        <PrimaryButton label="Gotovo" onPress={() => onOpenChange(false)} />
       </View>
     </BottomSheet>
   );

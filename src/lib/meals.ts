@@ -1,9 +1,34 @@
+import { MEAL_SUPPLEMENT_DEFINITIONS } from "@/src/constants/protocol";
 import { FOOD_DB } from "@/src/constants/food-db";
-import type { FoodBasis, FoodItem, FoodKind, LoggedMeal, LoggedMealItem } from "@/src/types/app";
+import type {
+  FoodBasis,
+  FoodItem,
+  FoodKind,
+  LoggedMeal,
+  LoggedMealItem,
+  MealSupplementKey,
+  MealSupplements,
+} from "@/src/types/app";
 
 export type MealSelection = {
   foodId: string;
   grams: number;
+};
+
+export const MEAL_SUPPLEMENT_KEYS: MealSupplementKey[] = [
+  "omega3WithMeal",
+  "potassiumSalted",
+  "multivitamin",
+  "calcium",
+  "magnesium",
+];
+
+export const EMPTY_MEAL_SUPPLEMENTS: MealSupplements = {
+  omega3WithMeal: false,
+  potassiumSalted: false,
+  multivitamin: false,
+  calcium: false,
+  magnesium: false,
 };
 
 const PRIORITY_ORDER = {
@@ -21,6 +46,19 @@ const BASIS_LABELS: Record<FoodBasis, string> = {
 
 function createId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function createEmptyMealSupplements(): MealSupplements {
+  return { ...EMPTY_MEAL_SUPPLEMENTS };
+}
+
+export function getMealSupplements(
+  meal: Pick<LoggedMeal, "supplements"> | null | undefined,
+) {
+  return {
+    ...createEmptyMealSupplements(),
+    ...(meal?.supplements ?? {}),
+  };
 }
 
 export function getBasisLabel(basis: FoodBasis) {
@@ -107,6 +145,7 @@ export function buildLoggedMeal(params: {
   proteins: MealSelection[];
   vegetables: MealSelection[];
   condiments: MealSelection[];
+  supplements: MealSupplements;
   existingMeal?: LoggedMeal | null;
 }) {
   const items = buildMealItems([
@@ -121,6 +160,7 @@ export function buildLoggedMeal(params: {
     name: getNextMealName(params.mealsForDate, params.existingMeal?.id),
     date: params.date,
     items,
+    supplements: { ...params.supplements },
     proteinG: totals.proteinG,
     calories: totals.calories,
   };
@@ -178,4 +218,44 @@ export function findMealSelection(
   }
 
   return selections.find((selection) => selection.foodId === foodId) ?? null;
+}
+
+export function countSupplementsForDate(
+  meals: LoggedMeal[],
+  excludedMealId?: string,
+) {
+  const counts = Object.fromEntries(
+    MEAL_SUPPLEMENT_KEYS.map((key) => [key, 0]),
+  ) as Record<MealSupplementKey, number>;
+
+  for (const meal of meals) {
+    if (meal.id === excludedMealId) {
+      continue;
+    }
+
+    const supplements = getMealSupplements(meal);
+    for (const key of MEAL_SUPPLEMENT_KEYS) {
+      if (supplements[key]) {
+        counts[key] += 1;
+      }
+    }
+  }
+
+  return counts;
+}
+
+export function getAvailableMealSupplementDefinitions(
+  meals: LoggedMeal[],
+  excludedMealId: string | undefined,
+  currentSupplements: MealSupplements,
+) {
+  const counts = countSupplementsForDate(meals, excludedMealId);
+
+  return MEAL_SUPPLEMENT_DEFINITIONS.filter((definition) => {
+    if (definition.dailyLimit === null) {
+      return true;
+    }
+
+    return currentSupplements[definition.key] || counts[definition.key] < definition.dailyLimit;
+  });
 }

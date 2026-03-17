@@ -27,7 +27,7 @@ export default function BodyFatRoute() {
   );
 
   useEffect(() => {
-    syncStep(5);
+    syncStep(4);
   }, [syncStep]);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function BodyFatRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Ako ne znas procenat masti, mozemo grubo da ga procenimo preko BMI-ja, ali samo za neaktivne osobe."
+      description="Ako znas procenat masti, to je bolji izbor. Ako ne znas, procenjujemo ga iz BMI-ja kao prakticnu zamenu."
       onPrimaryPress={() => {
         if (draftMode === "manual" && manualBodyFat !== null) {
           commitStep({
@@ -76,7 +76,7 @@ export default function BodyFatRoute() {
       onBackPress={goBack}
       primaryDisabled={!canContinue}
       primaryLabel="Nastavi"
-      step={5}
+      step={4}
       title="Procenat telesnih masti"
     >
       <Toggle
@@ -117,7 +117,7 @@ export default function BodyFatRoute() {
       ) : (
         <>
           <NumericInputCard
-            helpText="BMI procena je samo okvirna i najkorisnija je za neaktivne osobe."
+            helpText="Rucni bf% je precizniji. BMI procena je dobra zamena kad ne znas procenat masti."
             large={false}
             label="Visina"
             onChangeText={setDraftHeight}
@@ -127,7 +127,7 @@ export default function BodyFatRoute() {
           />
 
           <InfoCallout
-            description="Ako si misicav ili atletski gradjen, BMI lako moze da pogresi. Tada je bolje da procenat masti uneses rucno."
+            description="Ako si misicav ili atletski gradjen, BMI lako moze da promasi. Tada je bolji rucni unos bf%."
             title="Upozorenje"
             tone="warning"
           />
@@ -151,13 +151,17 @@ export default function BodyFatRoute() {
               </Text>
             ) : bmiEstimate.bmi !== null ? (
               <Text className="text-base leading-6 text-danger">
-                Ovaj BMI rezultat nije pogodan za pouzdanu procenu. Prebaci se na
-                rucni unos.
+                Ovaj BMI rezultat nije pogodan za pouzdanu procenu. Prebaci se na rucni unos.
               </Text>
             ) : null}
           </Card>
         </>
       )}
+
+      <InfoCallout
+        description="Ovaj broj menja kategoriju, proteinski multiplikator i procenu puta do ciljne tezine."
+        title="Zasto je vazno"
+      />
     </OnboardingStepScreen>
   );
 }

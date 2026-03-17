@@ -1,5 +1,5 @@
 import type { Activity, Gender, ProtocolCategory } from "@/src/types/app";
-import { kgToLbs } from "@/src/lib/units";
+import { kgToLbs, roundTo } from "@/src/lib/units";
 
 const CATEGORY_RANGES: Record<ProtocolCategory, Record<Activity, [number, number]>> =
   {
@@ -20,6 +20,12 @@ const CATEGORY_RANGES: Record<ProtocolCategory, Record<Activity, [number, number
     },
   };
 
+const CATEGORY_LABELS: Record<ProtocolCategory, string> = {
+  1: "Kategorija 1",
+  2: "Kategorija 2",
+  3: "Kategorija 3",
+};
+
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -34,6 +40,37 @@ export function getCategory(gender: Gender, bodyFatPct: number): ProtocolCategor
   if (bodyFatPct <= 24) return 1;
   if (bodyFatPct <= 34) return 2;
   return 3;
+}
+
+export function getCategoryLabel(category: ProtocolCategory) {
+  return CATEGORY_LABELS[category];
+}
+
+export function getNextCategoryThresholdBodyFatPct(
+  gender: Gender,
+  category: ProtocolCategory,
+) {
+  if (gender === "male") {
+    if (category === 3) {
+      return 25;
+    }
+
+    if (category === 2) {
+      return 15;
+    }
+
+    return null;
+  }
+
+  if (category === 3) {
+    return 34;
+  }
+
+  if (category === 2) {
+    return 24;
+  }
+
+  return null;
 }
 
 export function getProteinRange(category: ProtocolCategory, activity: Activity) {
@@ -64,6 +101,22 @@ export function calcLeanBodyMassKg(weightKg: number, bodyFatPct: number) {
   return weightKg * (1 - bodyFatPct / 100);
 }
 
+export function calcBodyFatPctFromLeanMass(weightKg: number, leanBodyMassKg: number) {
+  if (weightKg <= 0 || leanBodyMassKg <= 0 || leanBodyMassKg >= weightKg) {
+    return null;
+  }
+
+  return roundTo((1 - leanBodyMassKg / weightKg) * 100, 1);
+}
+
+export function calcWeightAtBodyFatPct(leanBodyMassKg: number, bodyFatPct: number) {
+  if (leanBodyMassKg <= 0 || bodyFatPct <= 0 || bodyFatPct >= 100) {
+    return null;
+  }
+
+  return roundTo(leanBodyMassKg / (1 - bodyFatPct / 100), 1);
+}
+
 export function calcLeanBodyMassLbs(weightKg: number, bodyFatPct: number) {
   return kgToLbs(calcLeanBodyMassKg(weightKg, bodyFatPct));
 }
@@ -81,7 +134,7 @@ export function calcProteinTarget(
 }
 
 export function calcEstimatedCalories(proteinG: number) {
-  return Math.round(proteinG * 4 + 20);
+  return Math.round(proteinG * 4 + 150);
 }
 
 export function calcWaterTargetGlasses(weightKg: number) {

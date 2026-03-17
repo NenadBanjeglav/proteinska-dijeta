@@ -3,14 +3,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { InfoCallout } from "@/src/components/onboarding/info-callout";
+import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
 
 const BENEFITS = [
-  "Brz pad telesne masti je moguc kada se plan sprovodi dosledno.",
-  "Dovoljan unos proteina pomaze da sacuvas misice dok skidas mast.",
-  "Dnevni cilj proteina prilagodjavamo tvom telu i nivou aktivnosti.",
+  "Dobijas dnevni cilj proteina prilagodjen telu, aktivnosti i cilju.",
+  "Odmah vidis grubu procenu koliko dugo traje put do ciljne tezine.",
+  "Sve ostaje lokalno na telefonu, bez naloga i komplikacija.",
 ];
 
 export default function WelcomeRoute() {
@@ -22,14 +22,14 @@ export default function WelcomeRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Brz i disciplinovan pristup mrsavljenju sa fokusom na ocuvanje misica."
+      description="Za manje od minuta izracunaj protein cilj i procenu koliko ti treba do ciljne tezine."
       onPrimaryPress={goNext}
-      primaryLabel="Pocni"
+      primaryLabel="Izracunaj plan"
       showBack={false}
       showHeader={false}
       showProgress={false}
       step={1}
-      title="Brzo Mrsavljenje"
+      title="Proteinska Dijeta"
     >
       <View className="items-center gap-6 pt-4">
         <LinearGradient
@@ -49,13 +49,13 @@ export default function WelcomeRoute() {
 
         <View className="items-center gap-3">
           <Text className="text-center text-4xl font-black text-text">
-            Brzo Mrsavljenje
+            Proteinska Dijeta
           </Text>
           <Text className="text-center text-sm font-bold uppercase tracking-[1.5px] text-warning">
             Protein Sparing Modified Fast
           </Text>
           <Text className="max-w-[320px] text-center text-base leading-7 text-muted">
-            Sacuvaj misice dok skidas masnocu sto efikasnije.
+            Brz, disciplinovan pristup skidanju masnoce uz fokus na ocuvanje misica.
           </Text>
         </View>
       </View>

@@ -364,8 +364,8 @@ export const FOOD_DB: FoodItem[] = [
   {
     id: "pickles",
     label: "Kiseli krastavci",
-    kind: "condiment",
-    priority: "condiment",
+    kind: "vegetable",
+    priority: "tierB",
     basis: "drained",
     proteinPer100g: 1,
     caloriesPer100g: 12,
@@ -373,8 +373,8 @@ export const FOOD_DB: FoodItem[] = [
   {
     id: "pickled-peppers",
     label: "Kisela paprika / feferoni",
-    kind: "condiment",
-    priority: "condiment",
+    kind: "vegetable",
+    priority: "tierB",
     basis: "drained",
     proteinPer100g: 1,
     caloriesPer100g: 24,

@@ -1,8 +1,11 @@
 import type { Href } from "expo-router";
 
-import { GOAL_DAYS } from "@/src/constants/protocol";
 import { calcBmi, canEstimateBodyFatFromBmi, estimateBodyFatFromBmi } from "@/src/lib/bmi";
 import { getTodayDate } from "@/src/lib/date";
+import {
+  type GoalProjection,
+  buildProjectionFromBodyFat,
+} from "@/src/lib/projection";
 import {
   calcEstimatedCalories,
   calcLeanBodyMassKg,
@@ -34,28 +37,31 @@ export type ProteinPreview = {
 };
 
 export type OnboardingPreview = ProteinPreview & {
-  goalTotalDays: number;
   startDate: string;
+  goalWeightKg: number;
+  goalTotalDays: number | null;
+  projection: GoalProjection;
 };
 
-const STEP_SEQUENCE: OnboardingStep[] = [1, 2, 3, 4, 5, 6, 7, 8];
+const STEP_SEQUENCE: OnboardingStep[] = [1, 2, 3, 4, 5, 6];
 
 const STEP_ROUTES: Record<OnboardingStep, Href> = {
   1: "/onboarding/welcome",
-  2: "/onboarding/name",
-  3: "/onboarding/gender",
-  4: "/onboarding/weight",
-  5: "/onboarding/body-fat",
-  6: "/onboarding/activity",
-  7: "/onboarding/goal",
-  8: "/onboarding/summary",
+  2: "/onboarding/goal",
+  3: "/onboarding/basics",
+  4: "/onboarding/body-fat",
+  5: "/onboarding/activity",
+  6: "/onboarding/summary",
 };
+
+export const ONBOARDING_STEP_COUNT = STEP_SEQUENCE.length;
 
 export const INITIAL_ONBOARDING_STATE: OnboardingWizardState = {
   step: 1,
   userName: "",
   gender: "male",
   weightKg: null,
+  goalWeightKg: null,
   weightUnit: "kg",
   bodyFatMode: "manual",
   bodyFatPct: null,
@@ -128,6 +134,17 @@ export function isWeightValid(weightKg: number | null) {
   return weightKg !== null && weightKg >= 35 && weightKg <= 350;
 }
 
+export function isGoalWeightValid(
+  currentWeightKg: number | null,
+  goalWeightKg: number | null,
+) {
+  return (
+    isWeightValid(currentWeightKg) &&
+    isWeightValid(goalWeightKg) &&
+    goalWeightKg! < currentWeightKg!
+  );
+}
+
 export function isBodyFatValid(bodyFatPct: number | null) {
   return bodyFatPct !== null && bodyFatPct >= 4 && bodyFatPct <= 60;
 }
@@ -179,44 +196,38 @@ export function isStepValid(state: OnboardingWizardState, step: OnboardingStep) 
     case 1:
       return true;
     case 2:
-      return isNameValid(state.userName);
-    case 3:
-      return true;
-    case 4:
-      return isWeightValid(state.weightKg);
-    case 5:
-      return resolveBodyFatPct(state) !== null;
-    case 6:
-      return state.activity !== null;
-    case 7:
       return state.goalType !== null;
-    case 8:
+    case 3:
+      return isGoalWeightValid(state.weightKg, state.goalWeightKg);
+    case 4:
+      return resolveBodyFatPct(state) !== null;
+    case 5: {
+      const preview = buildOnboardingPreview(state);
+      return state.activity !== null && preview?.projection.status !== "invalid";
+    }
+    case 6:
       return buildOnboardingProfile(state) !== null;
   }
 }
 
 export function getFirstIncompleteStep(state: OnboardingWizardState): OnboardingStep {
-  if (!isNameValid(state.userName)) {
+  if (state.goalType === null) {
     return 2;
   }
 
-  if (!isWeightValid(state.weightKg)) {
-    return 4;
+  if (!isGoalWeightValid(state.weightKg, state.goalWeightKg)) {
+    return 3;
   }
 
   if (resolveBodyFatPct(state) === null) {
-    return 5;
+    return 4;
   }
 
   if (state.activity === null) {
-    return 6;
+    return 5;
   }
 
-  if (state.goalType === null) {
-    return 7;
-  }
-
-  return 8;
+  return 6;
 }
 
 export function buildProteinPreview(state: OnboardingWizardState): ProteinPreview | null {
@@ -243,8 +254,7 @@ export function buildProteinPreview(state: OnboardingWizardState): ProteinPrevie
     state.gender,
     state.activity,
   );
-  const bmiResult =
-    state.bodyFatMode === "bmi" ? getBmiEstimate(state).bmi : null;
+  const bmiResult = state.bodyFatMode === "bmi" ? getBmiEstimate(state).bmi : null;
 
   return {
     bmi: bmiResult === null ? null : roundTo(bmiResult, 1),
@@ -262,7 +272,7 @@ export function buildProteinPreview(state: OnboardingWizardState): ProteinPrevie
 export function buildOnboardingPreview(
   state: OnboardingWizardState,
 ): OnboardingPreview | null {
-  if (!isNameValid(state.userName) || state.goalType === null) {
+  if (state.goalType === null || !isGoalWeightValid(state.weightKg, state.goalWeightKg)) {
     return null;
   }
 
@@ -271,10 +281,22 @@ export function buildOnboardingPreview(
     return null;
   }
 
+  const startDate = getTodayDate();
+  const projection = buildProjectionFromBodyFat({
+    startDate,
+    currentWeightKg: state.weightKg!,
+    goalWeightKg: state.goalWeightKg!,
+    bodyFatPct: proteinPreview.bodyFatPct,
+    gender: state.gender,
+    activity: state.activity!,
+  });
+
   return {
     ...proteinPreview,
-    goalTotalDays: GOAL_DAYS[state.goalType],
-    startDate: getTodayDate(),
+    startDate,
+    goalWeightKg: state.goalWeightKg!,
+    goalTotalDays: projection.projectedDays,
+    projection,
   };
 }
 
@@ -284,19 +306,22 @@ export function buildOnboardingProfile(
   const preview = buildOnboardingPreview(state);
   if (
     !preview ||
+    preview.projection.status === "invalid" ||
     !isWeightValid(state.weightKg) ||
+    !isGoalWeightValid(state.weightKg, state.goalWeightKg) ||
     state.activity === null ||
     state.goalType === null
   ) {
     return null;
   }
 
-  const startingWeightKg = state.weightKg!;
+  const trimmedName = state.userName.trim();
 
   return {
-    userName: state.userName.trim(),
+    userName: trimmedName ? trimmedName : null,
     startDate: preview.startDate,
-    startingWeightKg,
+    startingWeightKg: state.weightKg!,
+    goalWeightKg: state.goalWeightKg!,
     proteinTargetG: preview.proteinTargetG,
     gender: state.gender,
     bodyFatPct: preview.bodyFatPct,

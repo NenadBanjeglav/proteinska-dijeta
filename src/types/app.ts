@@ -12,6 +12,15 @@ export type WeightEntry = {
   kg: number;
 };
 
+export type MealSupplementKey =
+  | "omega3WithMeal"
+  | "potassiumSalted"
+  | "multivitamin"
+  | "calcium"
+  | "magnesium";
+
+export type MealSupplements = Record<MealSupplementKey, boolean>;
+
 export type LoggedMealItem = {
   id: string;
   foodId: string;
@@ -26,6 +35,7 @@ export type LoggedMeal = {
   id: string;
   name: string;
   items: LoggedMealItem[];
+  supplements: MealSupplements;
   proteinG: number;
   calories: number;
   date: string;
@@ -35,7 +45,9 @@ export type PSMFStore = {
   userName: string | null;
   startDate: string | null;
   startingWeightKg: number | null;
+  goalWeightKg: number | null;
   proteinTargetG: number | null;
+  dismissedProteinChangeKey: string | null;
   gender: Gender | null;
   bodyFatPct: number | null;
   activity: Activity | null;
@@ -47,10 +59,11 @@ export type PSMFStore = {
 };
 
 export type OnboardingWizardState = {
-  step: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  step: 1 | 2 | 3 | 4 | 5 | 6;
   userName: string;
   gender: Gender;
   weightKg: number | null;
+  goalWeightKg: number | null;
   weightUnit: WeightUnit;
   bodyFatMode: BodyFatInputMode;
   bodyFatPct: number | null;
@@ -60,15 +73,16 @@ export type OnboardingWizardState = {
 };
 
 export type OnboardingProfile = {
-  userName: string;
+  userName: string | null;
   startDate: string;
   startingWeightKg: number;
+  goalWeightKg: number;
   proteinTargetG: number;
   gender: Gender;
   bodyFatPct: number;
   activity: Activity;
   goalType: GoalType;
-  goalTotalDays: number;
+  goalTotalDays: number | null;
 };
 
 export type FoodKind = "protein" | "vegetable" | "condiment";
@@ -91,6 +105,8 @@ export type PSMFAppStore = {
   hydrate: () => Promise<void>;
   clearStore: () => Promise<void>;
   saveOnboardingProfile: (profile: OnboardingProfile) => Promise<void>;
+  setGoalWeightKg: (goalWeightKg: number) => Promise<void>;
+  setDismissedProteinChangeKey: (key: string | null) => Promise<void>;
   saveWeightEntry: (kg: number, date: string) => Promise<void>;
   saveMeal: (meal: LoggedMeal) => Promise<void>;
   deleteMeal: (mealId: string) => Promise<void>;
