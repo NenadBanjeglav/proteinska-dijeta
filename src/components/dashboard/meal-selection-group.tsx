@@ -7,14 +7,18 @@ type MealSelectionGroupProps = {
   title: string;
   items: (MealSelection & { label: string })[];
   onEditAmount: (foodId: string) => void;
+  onAdjustAmount: (foodId: string, delta: number) => void;
   onRemove: (foodId: string) => void;
+  stepSize: number;
 };
 
 export function MealSelectionGroup({
   title,
   items,
   onEditAmount,
+  onAdjustAmount,
   onRemove,
+  stepSize,
 }: MealSelectionGroupProps) {
   if (!items.length) {
     return null;
@@ -30,8 +34,11 @@ export function MealSelectionGroup({
           key={item.foodId}
           grams={item.grams}
           label={item.label}
+          onDecreaseAmount={() => onAdjustAmount(item.foodId, -stepSize)}
           onClear={() => onRemove(item.foodId)}
           onEditAmount={() => onEditAmount(item.foodId)}
+          onIncreaseAmount={() => onAdjustAmount(item.foodId, stepSize)}
+          stepLabel={`${stepSize} g`}
         />
       ))}
     </View>

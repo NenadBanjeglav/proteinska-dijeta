@@ -29,7 +29,7 @@ export default function BasicsRoute() {
   );
 
   useEffect(() => {
-    syncStep(3);
+    syncStep(2);
   }, [syncStep]);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function BasicsRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Ovo su osnovni brojevi na kojima gradimo protein cilj i procenu puta do ciljne tezine."
+      description="Ovo su osnovni brojevi na kojima gradimo proteinski cilj i procenu puta do ciljne težine."
       onPrimaryPress={() => {
         if (isGoalWeightValid(weightKg, goalWeightKg)) {
           commitStep({
@@ -72,14 +72,14 @@ export default function BasicsRoute() {
       onBackPress={goBack}
       primaryDisabled={!isGoalWeightValid(weightKg, goalWeightKg)}
       primaryLabel="Nastavi"
-      step={3}
+      step={2}
       title="Osnovni podaci"
     >
       <Toggle
         onChange={setDraftGender}
         options={[
-          { label: "Muski", value: "male" },
-          { label: "Zenski", value: "female" },
+          { label: "Muški", value: "male" },
+          { label: "Ženski", value: "female" },
         ]}
         value={draftGender}
       />
@@ -94,8 +94,8 @@ export default function BasicsRoute() {
       />
 
       <NumericInputCard
-        helpText="Trenutna tezina je polazna tacka za izracunavanje nemasne mase i proteinskog cilja."
-        label="Trenutna tezina"
+        helpText="Trenutna težina je polazna tačka za izračunavanje nemasne mase i proteinskog cilja."
+        label="Trenutna težina"
         onChangeText={setDraftWeight}
         placeholder={draftUnit === "kg" ? "84" : "185.2"}
         suffix={draftUnit}
@@ -103,8 +103,8 @@ export default function BasicsRoute() {
       />
 
       <NumericInputCard
-        helpText="Ciljna tezina sluzi samo za procenu puta do cilja. Uvek mozes kasnije da je promenis."
-        label="Ciljna tezina"
+        helpText="Ciljna težina služi samo za procenu puta do cilja. Uvek možeš kasnije da je promeniš."
+        label="Ciljna težina"
         large={false}
         onChangeText={setDraftGoalWeight}
         placeholder={draftUnit === "kg" ? "76" : "167.5"}
@@ -119,7 +119,7 @@ export default function BasicsRoute() {
           </Text>
           <Text className="text-3xl font-black text-text">{deltaKg} kg</Text>
           <Text className="text-sm leading-6 text-muted-strong">
-            Toliko tezine treba da skinemo do cilja. Sledeci koraci su procenat masti i aktivnost.
+            Toliko težine treba da skinemo do cilja. Sledeći koraci su procenat masti i aktivnost.
           </Text>
         </Card>
       ) : null}
@@ -130,14 +130,14 @@ export default function BasicsRoute() {
       weightKg !== null &&
       goalWeightKg >= weightKg ? (
         <InfoCallout
-          description="Ciljna tezina mora da bude niza od trenutne da bismo imali smislen plan i projekciju."
+          description="Ciljna težina mora da bude niža od trenutne da bismo imali smislen plan i projekciju."
           title="Proveri cilj"
           tone="warning"
         />
       ) : null}
 
       <InfoCallout
-        description={`Pol menja pragove kategorije, a ciljnu tezinu koristimo samo za procenu puta do cilja. Sve tezine cuvamo interno u kilogramima.`}
+        description={`Pol menja pragove kategorije, a ciljnu težinu koristimo samo za procenu puta do cilja. Sve težine čuvamo interno u kilogramima.`}
         title="Kako ovo koristimo"
       />
     </OnboardingStepScreen>

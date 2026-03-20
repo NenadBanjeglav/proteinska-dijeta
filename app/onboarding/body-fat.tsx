@@ -27,7 +27,7 @@ export default function BodyFatRoute() {
   );
 
   useEffect(() => {
-    syncStep(4);
+    syncStep(3);
   }, [syncStep]);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function BodyFatRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Ako znas procenat masti, to je bolji izbor. Ako ne znas, procenjujemo ga iz BMI-ja kao prakticnu zamenu."
+      description="Ako znaš procenat masti, to je bolji izbor. Ako ne znaš, procenjujemo ga iz BMI-ja kao praktičnu zamenu."
       onPrimaryPress={() => {
         if (draftMode === "manual" && manualBodyFat !== null) {
           commitStep({
@@ -76,7 +76,7 @@ export default function BodyFatRoute() {
       onBackPress={goBack}
       primaryDisabled={!canContinue}
       primaryLabel="Nastavi"
-      step={4}
+      step={3}
       title="Procenat telesnih masti"
     >
       <Toggle
@@ -104,7 +104,7 @@ export default function BodyFatRoute() {
                 <Text className="text-sm text-muted">6-15%</Text>
               </View>
               <View className="flex-1 items-center border-r border-border px-4 py-4">
-                <Text className="text-base font-bold text-text">Prosecan</Text>
+                <Text className="text-base font-bold text-text">Prosečan</Text>
                 <Text className="text-sm text-muted">15-25%</Text>
               </View>
               <View className="flex-1 items-center px-4 py-4">
@@ -117,7 +117,7 @@ export default function BodyFatRoute() {
       ) : (
         <>
           <NumericInputCard
-            helpText="Rucni bf% je precizniji. BMI procena je dobra zamena kad ne znas procenat masti."
+            helpText="Ručni bf% je precizniji. BMI procena je dobra zamena kad ne znaš procenat masti."
             large={false}
             label="Visina"
             onChangeText={setDraftHeight}
@@ -127,7 +127,7 @@ export default function BodyFatRoute() {
           />
 
           <InfoCallout
-            description="Ako si misicav ili atletski gradjen, BMI lako moze da promasi. Tada je bolji rucni unos bf%."
+            description="Ako si mišićav ili atletski građen, BMI lako može da promaši. Tada je bolji ručni unos bf%."
             title="Upozorenje"
             tone="warning"
           />
@@ -142,7 +142,7 @@ export default function BodyFatRoute() {
               </Text>
             ) : (
               <Text className="text-base text-muted">
-                Unesi visinu da izracunamo BMI.
+                Unesi visinu da izračunamo BMI.
               </Text>
             )}
             {bmiEstimate.estimatedBodyFatPct !== null ? (
@@ -151,7 +151,7 @@ export default function BodyFatRoute() {
               </Text>
             ) : bmiEstimate.bmi !== null ? (
               <Text className="text-base leading-6 text-danger">
-                Ovaj BMI rezultat nije pogodan za pouzdanu procenu. Prebaci se na rucni unos.
+                Ovaj BMI rezultat nije pogodan za pouzdanu procenu. Prebaci se na ručni unos.
               </Text>
             ) : null}
           </Card>
@@ -159,8 +159,8 @@ export default function BodyFatRoute() {
       )}
 
       <InfoCallout
-        description="Ovaj broj menja kategoriju, proteinski multiplikator i procenu puta do ciljne tezine."
-        title="Zasto je vazno"
+        description="Ovaj broj menja kategoriju, proteinski multiplikator i procenu puta do ciljne težine."
+        title="Zašto je važno"
       />
     </OnboardingStepScreen>
   );

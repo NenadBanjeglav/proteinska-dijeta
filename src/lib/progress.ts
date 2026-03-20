@@ -2,7 +2,7 @@ import { getElapsedDays } from "@/src/lib/date";
 import { roundTo } from "@/src/lib/units";
 import type { WeightEntry } from "@/src/types/app";
 
-export type ChartPeriod = "week" | "all";
+export type ChartPeriod = "week" | "month" | "all";
 export type ProgressMilestoneTone = "default" | "accent" | "success";
 
 export type ProgressMilestone = {
@@ -89,7 +89,7 @@ export function getProtocolLabel(remainingDays: number | null) {
   }
 
   if (remainingDays === 0) {
-    return "Zavrsnica";
+    return "Završnica";
   }
 
   if (remainingDays === 1) {
@@ -108,7 +108,7 @@ export function formatProgressDate(dateKey: string) {
 
 export function formatWeightStat(weightKg: number | null) {
   if (weightKg === null) {
-    return "—";
+    return "-";
   }
 
   return `${roundTo(weightKg, 1)} kg`;
@@ -116,6 +116,12 @@ export function formatWeightStat(weightKg: number | null) {
 
 export function formatWeightDeltaKg(deltaKg: number) {
   return `${roundTo(deltaKg, 1)} kg`;
+}
+
+export function formatSignedWeightDeltaKg(deltaKg: number) {
+  const rounded = roundTo(deltaKg, 1);
+  const sign = rounded > 0 ? "+" : "";
+  return `${sign}${rounded} kg`;
 }
 
 export function formatCaloriesStat(calories: number) {
@@ -126,6 +132,10 @@ export function selectChartEntriesForPeriod(
   entries: WeightEntry[],
   period: ChartPeriod,
 ) {
+  if (period === "month") {
+    return entries.slice(-30);
+  }
+
   if (period === "all") {
     return entries;
   }
@@ -150,15 +160,17 @@ export function buildProgressMilestones(params: {
       id: "first-loss",
       badge: `-${formatWeightDeltaKg(params.totalLostKg)}`,
       title: "Prvi minus je tu",
-      description: "Vaga ide nadole. Nastavi istim ritmom i ne pokusavaj da na silu ubrzas rezultat.",
+      description:
+        "Vaga ide nadole. Nastavi istim ritmom i ne pokušavaj da na silu ubrzaš rezultat.",
       tone: "success",
     });
   } else {
     milestones.push({
       id: "first-entry",
       badge: "Start",
-      title: "Pocetna baza je sacuvana",
-      description: "Unosi jutarnju tezinu svakog dana da grafikon dobije smisao i da trend postane koristan.",
+      title: "Početna baza je sačuvana",
+      description:
+        "Unosi jutarnju težinu svakog dana da grafikon dobije smisao i da trend postane koristan.",
       tone: "default",
     });
   }
@@ -170,7 +182,7 @@ export function buildProgressMilestones(params: {
     description:
       params.complianceDays >= Math.min(7, Math.max(1, params.elapsedDays))
         ? "Dobar niz. Doslednost daje jasan signal, ne jedan izdvojen broj."
-        : "Jos malo doslednosti i trend ce biti cistiji i laksi za pracenje.",
+        : "Još malo doslednosti i trend će biti čistiji i lakši za praćenje.",
     tone: params.complianceDays >= Math.min(7, Math.max(1, params.elapsedDays)) ? "accent" : "default",
   });
 
@@ -180,8 +192,8 @@ export function buildProgressMilestones(params: {
     title: params.progress >= 1 ? "Faza je kompletirana" : "Faza je u toku",
     description:
       params.progress >= 1
-        ? "Ceo plan je zavrsen. Sada mirno proceni sledeci korak, bez naglih korekcija."
-        : "Prati ritam faze iz dana u dan. Voda i dnevne oscilacije ne menjaju smer ako se plana drzis.",
+        ? "Ceo plan je završen. Sada mirno proceni sledeći korak, bez naglih korekcija."
+        : "Prati ritam faze iz dana u dan. Voda i dnevne oscilacije ne menjaju smer ako se plana držiš.",
     tone: params.progress >= 1 ? "success" : "accent",
   });
 

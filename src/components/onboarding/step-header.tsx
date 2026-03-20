@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 
 import { SectionHeader } from "@/src/components/ui/section-header";
@@ -29,10 +30,12 @@ export function StepHeader({
         <View className="flex-row items-center gap-4">
           {showBack ? (
             <Pressable
+              accessibilityLabel="Nazad"
+              accessibilityRole="button"
               className="h-9 w-9 items-center justify-center rounded-full"
               onPress={onBackPress}
             >
-              <Text className="text-2xl font-medium text-muted-strong">{"<"}</Text>
+              <Ionicons color="#CBD5E1" name="arrow-back" size={20} />
             </Pressable>
           ) : (
             <View className="h-9 w-9" />

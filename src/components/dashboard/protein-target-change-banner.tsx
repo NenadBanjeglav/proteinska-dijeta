@@ -23,16 +23,16 @@ export function ProteinTargetChangeBanner({
 
       <View className="gap-1">
         <Text className="text-2xl font-black text-text">
-          Danasnji cilj je {payload.currentProteinTargetG} g
+          Današnji cilj je {payload.currentProteinTargetG} g
         </Text>
         <Text className="text-sm leading-6 text-muted">
-          Jutarnja tezina te je prebacila u {payload.currentCategoryLabel}. Juce{" "}
+          Jutarnja težina te je prebacila u {payload.currentCategoryLabel}. Juče{" "}
           {payload.previousProteinTargetG} g, danas {payload.currentProteinTargetG} g.
         </Text>
       </View>
 
       <View className="flex-row flex-wrap gap-2">
-        <ActionPill label="Zasto?" onPress={onExplain} variant="accent" />
+        <ActionPill label="Zašto?" onPress={onExplain} variant="accent" />
         <ActionPill label="Skloni" onPress={onDismiss} variant="muted" />
       </View>
     </Card>

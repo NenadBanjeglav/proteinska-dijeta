@@ -56,7 +56,7 @@ export function ProgressHeroCard({
           >
             {currentWeightLabel}
           </Text>
-          <Text className="text-sm text-muted">Pocetak: {startingWeightLabel}</Text>
+          <Text className="text-sm text-muted">Početak: {startingWeightLabel}</Text>
         </View>
       </View>
 

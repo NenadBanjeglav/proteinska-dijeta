@@ -1,18 +1,4 @@
-import type { GoalType, MealSupplementKey } from "@/src/types/app";
-
-export const GOAL_DAYS: Record<GoalType, number> = {
-  kickstart: 14,
-  plateau: 14,
-  event: 21,
-  full: 35,
-};
-
-export const GOAL_LABELS: Record<GoalType, string> = {
-  kickstart: "Pokretanje dijete",
-  plateau: "Probijanje platoa",
-  event: "Priprema za dogadjaj",
-  full: "Puna faza mrsavljenja",
-};
+import type { MealSupplementKey } from "@/src/types/app";
 
 export const SUPPLEMENT_GUIDANCE = [
   "Riblje ulje 6 x 1 g dnevno ili 1 kasika lanenog ulja",

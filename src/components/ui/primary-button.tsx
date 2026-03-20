@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { colors } from "@/src/constants/colors";
 import { cn } from "@/src/lib/cn";
+import { triggerHaptic, type AppHaptic } from "@/src/lib/haptics";
 
 type PrimaryButtonVariant = "primary" | "secondary" | "ghost";
 
@@ -12,6 +13,7 @@ type PrimaryButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   variant?: PrimaryButtonVariant;
+  haptic?: AppHaptic;
 };
 
 export function PrimaryButton({
@@ -20,11 +22,20 @@ export function PrimaryButton({
   disabled = false,
   loading = false,
   variant = "primary",
+  haptic = "light",
 }: PrimaryButtonProps) {
   const isInactive = disabled || loading;
 
   return (
-    <Pressable disabled={isInactive} onPress={onPress}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isInactive }}
+      disabled={isInactive}
+      onPress={() => {
+        triggerHaptic(haptic);
+        onPress();
+      }}
+    >
       {variant === "primary" ? (
         <LinearGradient
           colors={[colors.accentStart, colors.accentEnd]}
@@ -37,6 +48,7 @@ export function PrimaryButton({
             justifyContent: "center",
             alignItems: "center",
             paddingHorizontal: 24,
+            paddingVertical: 14,
           }}
         >
           {loading ? (

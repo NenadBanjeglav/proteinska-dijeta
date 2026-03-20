@@ -79,11 +79,11 @@ export function selectIsOnboarded(store: PSMFStore) {
   return (
     !!store.startDate &&
     store.startingWeightKg !== null &&
+    store.goalWeightKg !== null &&
     store.proteinTargetG !== null &&
     !!store.gender &&
     store.bodyFatPct !== null &&
-    !!store.activity &&
-    !!store.goalType
+    !!store.activity
   );
 }
 

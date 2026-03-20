@@ -22,7 +22,11 @@ export function SelectionCard({
   badge,
 }: SelectionCardProps) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+    >
       <Card
         className={cn(
           "gap-3 px-4 py-4",

@@ -137,6 +137,14 @@ export function calcEstimatedCalories(proteinG: number) {
   return Math.round(proteinG * 4 + 150);
 }
 
+export function calcWaterTargetMl(weightKg: number) {
+  return Math.max(0, Math.round(weightKg * 35));
+}
+
+export function calcWaterTargetLiters(weightKg: number) {
+  return roundTo(calcWaterTargetMl(weightKg) / 1000, 1);
+}
+
 export function calcWaterTargetGlasses(weightKg: number) {
-  return Math.max(1, Math.round((weightKg * 35) / 250));
+  return Math.max(1, Math.round(calcWaterTargetMl(weightKg) / 250));
 }

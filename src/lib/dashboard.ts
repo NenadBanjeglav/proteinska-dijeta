@@ -14,7 +14,7 @@ export function getGreeting(date = new Date()) {
     return "Dobar dan";
   }
 
-  return "Dobro vece";
+  return "Dobro veče";
 }
 
 export function getDayLabel(elapsedDays: number, totalDays: number | null) {
@@ -33,7 +33,7 @@ export function getRemainingLabel(remainingDays: number | null) {
   }
 
   if (remainingDays === 0) {
-    return "Zavrsni dan";
+    return "Završni dan";
   }
 
   if (remainingDays === 1) {
@@ -45,7 +45,7 @@ export function getRemainingLabel(remainingDays: number | null) {
 
 export function getMealsSummary(mealCount: number, proteinConsumed: number) {
   const mealLabel = mealCount === 1 ? "obrok" : "obroka";
-  return `${mealCount} ${mealLabel} - ukupno ${proteinConsumed} g proteina`;
+  return `${mealCount} ${mealLabel} • ukupno ${proteinConsumed} g proteina`;
 }
 
 export function getWeightDelta(
@@ -69,31 +69,31 @@ export function getWeightDeltaTone(deltaKg: number | null): WeightDeltaTone {
 
 export function getWeightDeltaLabel(deltaKg: number | null) {
   if (deltaKg === null) {
-    return "Prvi unos - jos nema poredjenja";
+    return "Prvi unos • još nema poređenja";
   }
 
   if (deltaKg === 0) {
-    return "Isto kao juce";
+    return "Isto kao juče";
   }
 
   const prefix = deltaKg > 0 ? "+" : "";
-  return `${prefix}${roundTo(deltaKg, 1)} kg u odnosu na juce`;
+  return `${prefix}${roundTo(deltaKg, 1)} kg u odnosu na juče`;
 }
 
 export function getWeightDeltaMessage(deltaKg: number | null) {
   if (deltaKg === null) {
-    return "Ovo je prvi unos. Vec od sutra imaces poredjenje sa prethodnim danom.";
+    return "Ovo je prvi unos. Već od sutra imaćeš poređenje sa prethodnim danom.";
   }
 
   if (deltaKg === 0) {
-    return "Danas nema promene. Vazniji je trend kroz vise dana nego jedan broj.";
+    return "Danas nema promene. Važniji je trend kroz više dana nego jedan broj.";
   }
 
   if (deltaKg < 0) {
-    return "Pad je dobar signal. Nastavi po planu i ne pokusavaj da na silu ubrzas minus.";
+    return "Pad je dobar signal. Nastavi po planu i ne pokušavaj da na silu ubrzaš minus.";
   }
 
-  return "Kratkorocan skok je normalan. Voda, so i varenje cesto objasne veci deo razlike.";
+  return "Kratkoročan skok je normalan. Voda, so i varenje često objasne veći deo razlike.";
 }
 
 export function formatWeightKg(weightKg: number) {

@@ -8,14 +8,21 @@ import type { WeightEntry } from "@/src/types/app";
 type WeightChartProps = {
   entries: WeightEntry[];
   width: number;
+  selectedDate: string | null;
+  onSelectDate: (date: string) => void;
+};
+
+type ChartPoint = WeightEntry & {
+  x: number;
+  y: number;
 };
 
 function getVisibleLabelIndexes(length: number) {
-  if (length <= 6) {
+  if (length <= 5) {
     return new Set(Array.from({ length }, (_, index) => index));
   }
 
-  const interval = Math.ceil((length - 1) / 5);
+  const interval = Math.ceil((length - 1) / 4);
   const indexes = new Set<number>([0, length - 1]);
 
   for (let index = 0; index < length; index += interval) {
@@ -25,16 +32,31 @@ function getVisibleLabelIndexes(length: number) {
   return indexes;
 }
 
-export function WeightChart({ entries, width }: WeightChartProps) {
+export function WeightChart({
+  entries,
+  width,
+  selectedDate,
+  onSelectDate,
+}: WeightChartProps) {
   const chartWidth = Math.max(220, width);
   const chartHeight = 180;
   const paddingX = 8;
   const paddingY = 16;
   const baselineY = chartHeight - paddingY;
 
-  const points = useMemo(() => {
-    if (entries.length < 2) {
+  const points = useMemo<ChartPoint[]>(() => {
+    if (!entries.length) {
       return [];
+    }
+
+    if (entries.length === 1) {
+      return [
+        {
+          ...entries[0],
+          x: chartWidth / 2,
+          y: chartHeight / 2,
+        },
+      ];
     }
 
     const weights = entries.map((entry) => entry.kg);
@@ -51,33 +73,24 @@ export function WeightChart({ entries, width }: WeightChartProps) {
     });
   }, [baselineY, chartHeight, chartWidth, entries, paddingX, paddingY]);
 
+  const selectedPoint =
+    points.find((point) => point.date === selectedDate) ?? points[points.length - 1] ?? null;
+
   if (!entries.length) {
     return (
       <View className="rounded-3xl border border-dashed border-border px-5 py-10">
         <Text className="text-base leading-6 text-muted">
-          Grafik ce se pojaviti cim sacuvas prvi jutarnji unos tezine.
+          Grafik će se pojaviti čim sačuvaš prvo jutarnje merenje težine.
         </Text>
       </View>
     );
   }
 
   if (entries.length === 1) {
-    const entry = entries[0];
-    const centerX = chartWidth / 2;
-    const pointY = chartHeight / 2;
+    const point = points[0];
 
     return (
       <View className="gap-4">
-        <View className="items-center gap-1">
-          <Text
-            className="text-3xl font-black text-text"
-            style={{ fontVariant: ["tabular-nums"] }}
-          >
-            {entry.kg} kg
-          </Text>
-          <Text className="text-sm text-muted">{formatProgressDate(entry.date)}</Text>
-        </View>
-
         <Svg height={chartHeight} width={chartWidth}>
           <Line
             stroke="rgba(148, 163, 184, 0.16)"
@@ -89,25 +102,33 @@ export function WeightChart({ entries, width }: WeightChartProps) {
           />
           <Line
             stroke="rgba(255, 122, 0, 0.22)"
+            strokeDasharray="6 6"
             strokeWidth={2}
-            x1={centerX}
-            x2={centerX}
+            x1={point.x}
+            x2={point.x}
             y1={paddingY + 12}
             y2={baselineY - 10}
           />
-          <Circle cx={centerX} cy={pointY} fill="#FF7A00" r={7} />
+          <Circle cx={point.x} cy={point.y} fill="#FF7A00" r={7} />
           <Circle
-            cx={centerX}
-            cy={pointY}
+            cx={point.x}
+            cy={point.y}
             fill="transparent"
-            r={14}
+            r={15}
             stroke="rgba(255, 122, 0, 0.24)"
             strokeWidth={2}
+          />
+          <Circle
+            cx={point.x}
+            cy={point.y}
+            fill="rgba(255,255,255,0.001)"
+            onPress={() => onSelectDate(point.date)}
+            r={18}
           />
         </Svg>
 
         <Text className="text-center text-sm leading-6 text-muted">
-          Treba jos jedan jutarnji unos da bismo prikazali pravi trend, a ne samo referentnu tacku.
+          Dodaj još jedno jutarnje merenje da bismo prikazali pravi trend, a ne samo jednu tačku.
         </Text>
       </View>
     );
@@ -144,6 +165,18 @@ export function WeightChart({ entries, width }: WeightChartProps) {
           />
         ))}
 
+        {selectedPoint ? (
+          <Line
+            stroke="rgba(248, 250, 252, 0.18)"
+            strokeDasharray="6 6"
+            strokeWidth={1.5}
+            x1={selectedPoint.x}
+            x2={selectedPoint.x}
+            y1={paddingY}
+            y2={baselineY}
+          />
+        ) : null}
+
         <Path d={areaPath} fill="url(#progressFill)" />
         <Path
           d={linePath}
@@ -155,6 +188,7 @@ export function WeightChart({ entries, width }: WeightChartProps) {
         />
 
         {points.map((point, index) => {
+          const isSelected = point.date === selectedPoint?.date;
           const isLast = index === points.length - 1;
 
           return (
@@ -162,13 +196,35 @@ export function WeightChart({ entries, width }: WeightChartProps) {
               key={point.date}
               cx={point.x}
               cy={point.y}
-              fill={isLast ? "#F8FAFC" : "#FF7A00"}
-              r={isLast ? 4.5 : 3}
+              fill={isSelected || isLast ? "#F8FAFC" : "#FF7A00"}
+              r={isSelected ? 5.5 : isLast ? 4.5 : 3}
               stroke="#FF7A00"
-              strokeWidth={isLast ? 2 : 0}
+              strokeWidth={isSelected || isLast ? 2 : 0}
             />
           );
         })}
+
+        {selectedPoint ? (
+          <Circle
+            cx={selectedPoint.x}
+            cy={selectedPoint.y}
+            fill="transparent"
+            r={13}
+            stroke="rgba(255, 122, 0, 0.22)"
+            strokeWidth={3}
+          />
+        ) : null}
+
+        {points.map((point) => (
+          <Circle
+            key={`${point.date}-hit`}
+            cx={point.x}
+            cy={point.y}
+            fill="rgba(255,255,255,0.001)"
+            onPress={() => onSelectDate(point.date)}
+            r={16}
+          />
+        ))}
       </Svg>
 
       <View className="flex-row items-center">

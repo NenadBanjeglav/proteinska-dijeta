@@ -1,5 +1,5 @@
-import { MEAL_SUPPLEMENT_DEFINITIONS } from "@/src/constants/protocol";
 import { FOOD_DB } from "@/src/constants/food-db";
+import { MEAL_SUPPLEMENT_DEFINITIONS } from "@/src/constants/protocol";
 import type {
   FoodBasis,
   FoodItem,
@@ -40,7 +40,7 @@ const PRIORITY_ORDER = {
 
 const BASIS_LABELS: Record<FoodBasis, string> = {
   raw: "sirovo",
-  drained: "ocedjeno",
+  drained: "oceđeno",
   asPackaged: "pakovanje",
 };
 
@@ -90,10 +90,7 @@ export function calcMealValue(baseValue: number, grams: number) {
   return Math.round((baseValue * grams) / 100);
 }
 
-export function buildMealItem(
-  food: FoodItem,
-  grams: number,
-): LoggedMealItem {
+export function buildMealItem(food: FoodItem, grams: number): LoggedMealItem {
   return {
     id: createId("meal-item"),
     foodId: food.id,
@@ -128,15 +125,29 @@ export function sumLoggedMealItems(items: LoggedMealItem[]) {
   );
 }
 
-export function getNextMealName(meals: LoggedMeal[], editingMealId?: string) {
-  if (editingMealId) {
-    const existing = meals.find((meal) => meal.id === editingMealId);
-    if (existing) {
-      return existing.name;
-    }
+export function normalizeMealName(value: string) {
+  const normalized = value.trim().replace(/\s+/g, " ");
+  return normalized ? normalized : null;
+}
+
+export function buildAutoMealName(items: Pick<LoggedMealItem, "label">[]) {
+  const labels = items
+    .map((item) => item.label.trim())
+    .filter((label) => label.length > 0);
+
+  if (!labels.length) {
+    return "Obrok";
   }
 
-  return `Obrok ${meals.length + 1}`;
+  if (labels.length === 1) {
+    return labels[0];
+  }
+
+  if (labels.length === 2) {
+    return `${labels[0]} + ${labels[1]}`;
+  }
+
+  return `${labels[0]} + ${labels[1]} + još ${labels.length - 2}`;
 }
 
 export function buildLoggedMeal(params: {
@@ -146,6 +157,7 @@ export function buildLoggedMeal(params: {
   vegetables: MealSelection[];
   condiments: MealSelection[];
   supplements: MealSupplements;
+  customName?: string | null;
   existingMeal?: LoggedMeal | null;
 }) {
   const items = buildMealItems([
@@ -154,10 +166,12 @@ export function buildLoggedMeal(params: {
     ...params.condiments,
   ]);
   const totals = sumLoggedMealItems(items);
+  const customName = normalizeMealName(params.customName ?? "");
 
   return {
     id: params.existingMeal?.id ?? createId("meal"),
-    name: getNextMealName(params.mealsForDate, params.existingMeal?.id),
+    name: customName ?? buildAutoMealName(items),
+    customName,
     date: params.date,
     items,
     supplements: { ...params.supplements },
@@ -258,4 +272,38 @@ export function getAvailableMealSupplementDefinitions(
 
     return currentSupplements[definition.key] || counts[definition.key] < definition.dailyLimit;
   });
+}
+
+export function getRecentFoodIdsByKind(
+  meals: LoggedMeal[],
+  kind: FoodKind,
+  limit = 8,
+) {
+  const sortedMeals = [...meals].sort((left, right) => {
+    if (left.date !== right.date) {
+      return right.date.localeCompare(left.date);
+    }
+
+    return right.id.localeCompare(left.id);
+  });
+
+  const recentFoodIds: string[] = [];
+  const seen = new Set<string>();
+
+  for (const meal of sortedMeals) {
+    for (const item of meal.items) {
+      if (item.kind !== kind || seen.has(item.foodId)) {
+        continue;
+      }
+
+      seen.add(item.foodId);
+      recentFoodIds.push(item.foodId);
+
+      if (recentFoodIds.length >= limit) {
+        return recentFoodIds;
+      }
+    }
+  }
+
+  return recentFoodIds;
 }

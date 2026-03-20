@@ -1,8 +1,9 @@
 import { Pressable, Text, View } from "react-native";
 
-import { MEAL_SUPPLEMENT_DEFINITIONS } from "@/src/constants/protocol";
 import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/cn";
+import { triggerHaptic } from "@/src/lib/haptics";
+import { MEAL_SUPPLEMENT_DEFINITIONS } from "@/src/constants/protocol";
 import type { MealSupplementKey, MealSupplements } from "@/src/types/app";
 
 type MealBuilderSupplementsStepProps = {
@@ -23,7 +24,16 @@ function SupplementCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      className="rounded-3xl"
+      onPress={() => {
+        triggerHaptic("selection");
+        onPress();
+      }}
+    >
       <Card className={cn("gap-3 px-4 py-4", selected && "border-warning bg-surface-strong")}>
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1 gap-1">
@@ -98,7 +108,7 @@ export function MealBuilderSupplementsStep({
           Suplementi za ovaj obrok
         </Text>
         <Text className="text-sm leading-6 text-muted">
-          Omega-3 i kalijumovu so oznacavas po obroku. Dnevni suplementi nestaju kad
+          Omega-3 i kalijumovu so označavaš po obroku. Dnevni suplementi nestaju kad
           ispune svoj dnevni limit.
         </Text>
       </Card>
@@ -123,7 +133,7 @@ export function MealBuilderSupplementsStep({
             Dnevni suplementi
           </Text>
           <Text className="text-sm leading-6 text-muted">
-            Multivitamin, kalcijum i magnezijum su vec rasporedjeni kroz ranije obroke
+            Multivitamin, kalcijum i magnezijum su već raspoređeni kroz ranije obroke
             danas.
           </Text>
         </Card>

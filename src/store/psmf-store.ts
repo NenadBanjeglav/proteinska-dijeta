@@ -6,13 +6,20 @@ import {
   getStore,
   saveMeal as persistMeal,
   saveOnboardingProfile as persistOnboardingProfile,
+  updatePlanSettings as persistPlanSettings,
   saveWeightEntry as persistWeightEntry,
   setWaterGlasses as persistWaterGlasses,
   setGoalWeightKg as persistGoalWeightKg,
   setDismissedProteinChangeKey as persistDismissedProteinChangeKey,
+  toggleFavoriteFood as persistToggleFavoriteFood,
   deleteMeal as removeMeal,
 } from "@/src/store/storage";
-import type { LoggedMeal, OnboardingProfile, PSMFAppStore } from "@/src/types/app";
+import type {
+  LoggedMeal,
+  OnboardingProfile,
+  PSMFAppStore,
+  PlanSettingsUpdate,
+} from "@/src/types/app";
 
 export const usePsmfStore = create<PSMFAppStore>((set, get) => ({
   status: "idle",
@@ -38,6 +45,11 @@ export const usePsmfStore = create<PSMFAppStore>((set, get) => ({
     set({ data });
   },
 
+  updatePlanSettings: async (input: PlanSettingsUpdate) => {
+    const data = await persistPlanSettings(input);
+    set({ data });
+  },
+
   setGoalWeightKg: async (goalWeightKg: number) => {
     const data = await persistGoalWeightKg(goalWeightKg);
     set({ data });
@@ -60,6 +72,11 @@ export const usePsmfStore = create<PSMFAppStore>((set, get) => ({
 
   deleteMeal: async (mealId: string) => {
     const data = await removeMeal(mealId);
+    set({ data });
+  },
+
+  toggleFavoriteFood: async (foodId: string) => {
+    const data = await persistToggleFavoriteFood(foodId);
     set({ data });
   },
 

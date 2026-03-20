@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 
-import { ProgressBar } from "@/src/components/ui/progress-bar";
 import { HeaderActionButton } from "@/src/components/ui/header-action-button";
+import { ProgressBar } from "@/src/components/ui/progress-bar";
 
 type DashboardHeaderProps = {
   dayLabel: string;
@@ -25,12 +25,14 @@ export function DashboardHeader({
           <Text className="text-xs font-semibold uppercase tracking-[2px] text-muted">
             {dayLabel}
           </Text>
-          <Text className="text-[34px] font-black leading-10 text-text">{title}</Text>
+          <Text className="text-[34px] font-black leading-10 text-text" numberOfLines={2}>
+            {title}
+          </Text>
         </View>
 
         <View className="gap-2">
           <HeaderActionButton
-            accessibilityLabel="Podesavanja"
+            accessibilityLabel="Podešavanja"
             icon="settings-outline"
             onPress={onSettingsPress}
           />
@@ -41,7 +43,9 @@ export function DashboardHeader({
         <View className="flex-1">
           <ProgressBar progress={progress} />
         </View>
-        <Text className="text-sm text-muted">{remainingLabel}</Text>
+        <Text className="shrink-0 text-sm text-muted" numberOfLines={1}>
+          {remainingLabel}
+        </Text>
       </View>
     </View>
   );

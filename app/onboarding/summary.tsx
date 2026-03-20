@@ -6,7 +6,7 @@ import { InfoCallout } from "@/src/components/onboarding/info-callout";
 import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { Card } from "@/src/components/ui/card";
 import { Chip } from "@/src/components/ui/chip";
-import { GOAL_LABELS, SUPPLEMENT_CHECKLIST } from "@/src/constants/protocol";
+import { SUPPLEMENT_CHECKLIST } from "@/src/constants/protocol";
 import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
 import { calcWaterTargetGlasses } from "@/src/lib/psmf";
 
@@ -16,7 +16,7 @@ export default function SummaryRoute() {
   const [draftName, setDraftName] = useState(state.userName);
 
   useEffect(() => {
-    syncStep(6);
+    syncStep(5);
   }, [syncStep]);
 
   useEffect(() => {
@@ -29,17 +29,17 @@ export default function SummaryRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Plan je spreman. Jos jednom pogledaj brojke, a ime unesi samo ako hoces licniji ton u aplikaciji."
+      description="Plan je spreman. Još jednom pogledaj brojke, a ime unesi samo ako hoćeš ličniji ton u aplikaciji."
       onPrimaryPress={() => {
         void confirm({ userName: draftName });
       }}
       onBackPress={goBack}
       primaryDisabled={!canConfirm}
-      primaryLabel="Pocni danas"
+      primaryLabel="Počni danas"
       primaryLoading={isSubmitting}
       progressLabel="Gotovo"
       scroll
-      step={6}
+      step={5}
       title="Potvrda plana"
     >
       {preview ? (
@@ -56,20 +56,20 @@ export default function SummaryRoute() {
               </View>
               <View className="items-end gap-2">
                 <Chip label={`Kategorija ${preview.category}`} variant="accent" />
-                <Chip label={GOAL_LABELS[state.goalType!]} variant="warning" />
+                <Chip label="Gubitak masti" variant="warning" />
               </View>
             </View>
             <Text className="text-base leading-6 text-muted-strong">
-              Oko {preview.estimatedCalories} kcal dnevno - ciljna tezina{" "}
+              Oko {preview.estimatedCalories} kcal dnevno - ciljna težina{" "}
               {preview.goalWeightKg} kg
             </Text>
           </Card>
 
           <GoalProjectionCard
-            description="Ovo je pocetna procena. Posle onboarding-a grafik ce se osvezavati po tvojoj stvarnoj jutarnjoj tezini."
+            description="Ovo je početna procena. Posle onboarding-a grafikon će se osvežavati po tvojoj stvarnoj jutarnjoj težini."
             eyebrow="Put do cilja"
             projection={preview.projection}
-            title="Procena do ciljne tezine"
+            title="Procena do ciljne težine"
           />
 
           <Card className="gap-3">
@@ -81,11 +81,11 @@ export default function SummaryRoute() {
             </Text>
             {waterTarget !== null ? (
               <Text className="text-sm leading-6 text-muted-strong">
-                - Popij oko {waterTarget} casa vode.
+                - Popij oko {waterTarget} čaša vode.
               </Text>
             ) : null}
             <Text className="text-sm leading-6 text-muted-strong">
-              - Izmeri jutarnju tezinu odmah po budjenju, posle toaleta, pre hrane i vode.
+              - Izmeri jutarnju težinu odmah po buđenju, posle toaleta, pre hrane i vode.
             </Text>
             {SUPPLEMENT_CHECKLIST.map((item) => (
               <Text key={item} className="text-sm leading-6 text-muted-strong">
@@ -108,22 +108,22 @@ export default function SummaryRoute() {
               value={draftName}
             />
             <Text className="text-sm leading-6 text-muted">
-              Ako ostavis prazno, aplikacija ce koristiti neutralan pozdrav.
+              Ako ostaviš prazno, aplikacija će koristiti neutralan pozdrav.
             </Text>
           </Card>
 
           <InfoCallout
-            description="Kada potvrdis, cuvamo plan lokalno na telefonu. Ciljna tezina moze kasnije da se menja iz podesavanja."
+            description="Kada potvrdiš, čuvamo plan lokalno na telefonu. Ciljna težina može kasnije da se menja iz podešavanja."
             title="Posle potvrde"
           />
         </>
       ) : (
         <Card className="gap-2 border-danger bg-surface-soft">
           <Text className="text-base font-bold text-danger">
-            Plan jos nije spreman.
+            Plan još nije spreman.
           </Text>
           <Text className="text-sm leading-6 text-muted">
-            Vrati se korak nazad i proveri procenat masti, aktivnost ili ciljnu tezinu.
+            Vrati se korak nazad i proveri procenat masti, aktivnost ili ciljnu težinu.
           </Text>
         </Card>
       )}

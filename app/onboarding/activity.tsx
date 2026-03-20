@@ -20,7 +20,7 @@ export default function ActivityRoute() {
   const [draftActivity, setDraftActivity] = useState<Activity | null>(state.activity);
 
   useEffect(() => {
-    syncStep(5);
+    syncStep(4);
   }, [syncStep]);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function ActivityRoute() {
       onBackPress={goBack}
       primaryDisabled={!canContinue}
       primaryLabel="Pregledaj plan"
-      step={5}
+      step={4}
       title="Nivo aktivnosti"
     >
       <SelectionCard
@@ -72,7 +72,7 @@ export default function ActivityRoute() {
         title="Kardio"
       />
       <SelectionCard
-        description="Redovni treninzi sa tegovima i fokus na ocuvanje misica."
+        description="Redovni treninzi sa tegovima i fokus na očuvanje mišića."
         onPress={() => setDraftActivity("weights")}
         selected={draftActivity === "weights"}
         title="Trening sa tegovima"
@@ -103,23 +103,23 @@ export default function ActivityRoute() {
           <Text className="text-sm leading-6 text-muted-strong">
             {hasFixedRange
               ? `Fiksni multiplikator ${multiplierLabel}`
-              : `Preporuceni raspon je ${rangeLabel}, a tvoj multiplikator ${multiplierLabel}`}
+              : `Preporučeni raspon je ${rangeLabel}, a tvoj multiplikator ${multiplierLabel}`}
           </Text>
         </Card>
       ) : null}
 
       {preview ? (
         <GoalProjectionCard
-          description="Procena pretpostavlja strogi PSMF bez planiranih pauza i azurira se kasnije po tvojoj stvarnoj tezini."
+          description="Procena pretpostavlja strogi PSMF bez planiranih pauza i ažurira se kasnije po tvojoj stvarnoj težini."
           eyebrow="Procena puta do cilja"
           projection={preview.projection}
-          title="Koliko traje do ciljne tezine"
+          title="Koliko traje do ciljne težine"
         />
       ) : null}
 
       <InfoCallout
-        description="Ako menjas aktivnost, menjaju se i protein cilj i procena trajanja. Zato je ovo glavni trenutak kada plan dobija smisao."
-        title="Kako da citas ovo"
+        description="Ako menjaš aktivnost, menjaju se i proteinski cilj i procena trajanja. Zato je ovo glavni trenutak kada plan dobija smisao."
+        title="Kako da čitaš ovo"
       />
     </OnboardingStepScreen>
   );

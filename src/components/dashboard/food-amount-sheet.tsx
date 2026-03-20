@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 
+import { ActionPill } from "@/src/components/dashboard/action-pill";
 import { BottomSheet } from "@/src/components/ui/bottom-sheet";
 import { Card } from "@/src/components/ui/card";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
@@ -19,16 +20,22 @@ const MAX_GRAMS = 2000;
 
 const CONFIG = {
   protein: {
-    title: "Kolicina proteina",
+    title: "Količina proteina",
     description: "Unesi grame direktno za ovaj proteinski izvor.",
+    quickAmounts: [100, 150, 200],
+    step: 25,
   },
   vegetable: {
-    title: "Kolicina povrca",
-    description: "Unesi grame direktno za ovo povrce.",
+    title: "Količina povrća",
+    description: "Unesi grame direktno za ovo povrće.",
+    quickAmounts: [100, 150, 250],
+    step: 25,
   },
   condiment: {
-    title: "Kolicina dodatka",
+    title: "Količina dodatka",
     description: "Unesi grame direktno za ovaj dozvoljeni dodatak.",
+    quickAmounts: [5, 10, 20, 30],
+    step: 5,
   },
 } as const;
 
@@ -76,16 +83,21 @@ export function FoodAmountSheet({
 
   const config = CONFIG[kind];
 
+  function setGrams(nextValue: number) {
+    const safeValue = Math.max(1, Math.min(MAX_GRAMS, Math.round(nextValue)));
+    setDraftInput(String(safeValue));
+  }
+
   return (
     <BottomSheet
       onOpenChange={onOpenChange}
       open={open}
-      title={`${config.title} - ${foodLabel}`}
+      title={`${config.title} • ${foodLabel}`}
     >
       <View className="gap-4">
         <Card className="gap-3 border-warning bg-surface-strong px-5 py-6">
           <Text className="text-center text-xs font-semibold uppercase tracking-[1.8px] text-warning">
-            Kolicina u gramima
+            Količina u gramima
           </Text>
           <View className="flex-row items-end justify-center gap-3">
             <TextInput
@@ -103,15 +115,56 @@ export function FoodAmountSheet({
           </View>
           <Text className="text-center text-sm leading-6 text-muted">
             {isOutOfRange
-              ? `Unesi broj izmedju 1 i ${MAX_GRAMS} g.`
+              ? `Unesi broj između 1 i ${MAX_GRAMS} g.`
               : config.description}
           </Text>
+        </Card>
+
+        <Card className="gap-3">
+          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
+            Brza promena
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            <ActionPill
+              disabled={parsedGrams === null}
+              label={`-${config.step} g`}
+              onPress={() => {
+                if (parsedGrams === null) {
+                  return;
+                }
+
+                setGrams(parsedGrams - config.step);
+              }}
+              variant="muted"
+            />
+            {config.quickAmounts.map((amount) => (
+              <ActionPill
+                key={amount}
+                label={`${amount} g`}
+                onPress={() => setGrams(amount)}
+                variant={parsedGrams === amount ? "accent" : "muted"}
+              />
+            ))}
+            <ActionPill
+              disabled={parsedGrams === null}
+              label={`+${config.step} g`}
+              onPress={() => {
+                if (parsedGrams === null) {
+                  return;
+                }
+
+                setGrams(parsedGrams + config.step);
+              }}
+              variant="accent"
+            />
+          </View>
         </Card>
 
         <View className="gap-3 pt-1">
           <PrimaryButton
             disabled={!canSave}
-            label="Sacuvaj kolicinu"
+            haptic="success"
+            label="Sačuvaj količinu"
             onPress={() => {
               if (parsedGrams === null || isOutOfRange) {
                 return;
@@ -122,6 +175,7 @@ export function FoodAmountSheet({
             }}
           />
           <PrimaryButton
+            haptic="none"
             label="Odustani"
             onPress={() => onOpenChange(false)}
             variant="ghost"

@@ -70,13 +70,13 @@ function getLeanGoalThreshold(gender: Gender) {
 function getInvalidMessage(reason: "goal" | "lean-mass" | "deficit" | "duration") {
   switch (reason) {
     case "goal":
-      return "Ciljna tezina mora da bude niza od trenutne tezine.";
+      return "Ciljna težina mora da bude niža od trenutne težine.";
     case "lean-mass":
-      return "Ciljna tezina je ispod procenjene nemasne mase. Podigni cilj ili proveri procenat masti.";
+      return "Ciljna težina je ispod procenjene nemasne mase. Podigni cilj ili proveri procenat masti.";
     case "deficit":
       return "Sa ovim podacima ne dobijamo smislen kalorijski minus. Proveri unos ili cilj.";
     case "duration":
-      return "Do cilja bi trebalo previse dugo u jednoj strogoj fazi. Podigni ciljnu tezinu.";
+      return "Do cilja bi trebalo previše dugo u jednoj strogoj fazi. Podigni ciljnu težinu.";
   }
 }
 
@@ -91,7 +91,7 @@ function getCautionMessage(params: {
     params.projectedGoalBodyFatPct !== null &&
     params.projectedGoalBodyFatPct < leanThreshold
   ) {
-    return "Cilj te vodi vrlo nisko sa procentom masti. Procena ne racuna pauze, refeede ni adaptaciju.";
+    return "Cilj te vodi vrlo nisko sa procentom masti. Procena ne računa pauze, refeede ni adaptaciju.";
   }
 
   if (params.projectedDays > 42) {
@@ -128,7 +128,7 @@ export function buildGoalProjection({
 
     return {
       status: "ok",
-      message: "Ciljna tezina je vec dostignuta. Odrzavaj ritam i koristi graf istorije da pratis stabilizaciju.",
+      message: "Ciljna težina je već dostignuta. Održavaj ritam i koristi graf istorije da pratiš stabilizaciju.",
       currentWeightKg: roundedCurrentWeightKg,
       goalWeightKg: roundedGoalWeightKg,
       remainingKg: 0,

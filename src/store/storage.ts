@@ -8,12 +8,12 @@ import { sortWeightHistory } from "@/src/lib/date";
 import type {
   Activity,
   Gender,
-  GoalType,
   LoggedMeal,
   LoggedMealItemKind,
   LoggedMealItem,
   MealSupplements,
   OnboardingProfile,
+  PlanSettingsUpdate,
   PSMFStore,
   WeightEntry,
 } from "@/src/types/app";
@@ -22,7 +22,6 @@ export const STORAGE_KEY = "psmf_store";
 
 const GENDERS = new Set<Gender>(["male", "female"]);
 const ACTIVITIES = new Set<Activity>(["inactive", "aerobics", "weights"]);
-const GOALS = new Set<GoalType>(["kickstart", "plateau", "event", "full"]);
 const MEAL_KINDS = new Set(["protein", "vegetable", "condiment"]);
 
 export const DEFAULT_STORE: PSMFStore = {
@@ -35,10 +34,10 @@ export const DEFAULT_STORE: PSMFStore = {
   gender: null,
   bodyFatPct: null,
   activity: null,
-  goalType: null,
   goalTotalDays: null,
   weightHistory: [],
   meals: [],
+  favoriteFoodIds: [],
   waterGlassesByDate: {},
 };
 
@@ -47,6 +46,7 @@ function cloneDefaultStore(): PSMFStore {
     ...DEFAULT_STORE,
     weightHistory: [],
     meals: [],
+    favoriteFoodIds: [],
     waterGlassesByDate: {},
   };
 }
@@ -155,6 +155,7 @@ function parseMeal(value: unknown): LoggedMeal | null {
   return {
     id: value.id,
     name: value.name,
+    customName: isString(value.customName) ? value.customName : null,
     items,
     supplements: parseMealSupplements(value.supplements),
     proteinG: value.proteinG,
@@ -190,6 +191,9 @@ function sanitizeStore(value: unknown): PSMFStore {
         {},
       )
     : {};
+  const favoriteFoodIds = Array.isArray(value.favoriteFoodIds)
+    ? value.favoriteFoodIds.filter(isString)
+    : [];
 
   return {
     ...fallback,
@@ -204,10 +208,10 @@ function sanitizeStore(value: unknown): PSMFStore {
     gender: GENDERS.has(value.gender as Gender) ? (value.gender as Gender) : null,
     bodyFatPct: isNumber(value.bodyFatPct) ? value.bodyFatPct : null,
     activity: ACTIVITIES.has(value.activity as Activity) ? (value.activity as Activity) : null,
-    goalType: GOALS.has(value.goalType as GoalType) ? (value.goalType as GoalType) : null,
     goalTotalDays: isNumber(value.goalTotalDays) ? value.goalTotalDays : null,
     weightHistory: ensureStartWeightEntry(weightHistory, startDate, startingWeightKg),
     meals,
+    favoriteFoodIds,
     waterGlassesByDate,
   };
 }
@@ -252,7 +256,6 @@ export async function saveOnboardingProfile(profile: OnboardingProfile) {
       gender: profile.gender,
       bodyFatPct: profile.bodyFatPct,
       activity: profile.activity,
-      goalType: profile.goalType,
       goalTotalDays: profile.goalTotalDays,
       weightHistory: ensureStartWeightEntry(
         store.weightHistory,
@@ -261,6 +264,20 @@ export async function saveOnboardingProfile(profile: OnboardingProfile) {
       ),
     };
   });
+}
+
+export async function updatePlanSettings(input: PlanSettingsUpdate) {
+  return updateStore((store) => ({
+    ...store,
+    userName: input.userName,
+    goalWeightKg: input.goalWeightKg,
+    proteinTargetG: input.proteinTargetG,
+    dismissedProteinChangeKey: null,
+    gender: input.gender,
+    bodyFatPct: input.bodyFatPct,
+    activity: input.activity,
+    goalTotalDays: input.goalTotalDays,
+  }));
 }
 
 export async function setGoalWeightKg(goalWeightKg: number) {
@@ -303,6 +320,19 @@ export async function deleteMeal(mealId: string) {
     ...store,
     meals: store.meals.filter((meal) => meal.id !== mealId),
   }));
+}
+
+export async function toggleFavoriteFood(foodId: string) {
+  return updateStore((store) => {
+    const favoriteFoodIds = store.favoriteFoodIds.includes(foodId)
+      ? store.favoriteFoodIds.filter((currentId) => currentId !== foodId)
+      : [...store.favoriteFoodIds, foodId];
+
+    return {
+      ...store,
+      favoriteFoodIds,
+    };
+  });
 }
 
 export async function setWaterGlasses(date: string, count: number) {

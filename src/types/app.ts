@@ -1,4 +1,3 @@
-export type GoalType = "kickstart" | "plateau" | "event" | "full";
 export type Gender = "male" | "female";
 export type Activity = "inactive" | "aerobics" | "weights";
 export type ProtocolCategory = 1 | 2 | 3;
@@ -34,6 +33,7 @@ export type LoggedMealItem = {
 export type LoggedMeal = {
   id: string;
   name: string;
+  customName: string | null;
   items: LoggedMealItem[];
   supplements: MealSupplements;
   proteinG: number;
@@ -51,15 +51,15 @@ export type PSMFStore = {
   gender: Gender | null;
   bodyFatPct: number | null;
   activity: Activity | null;
-  goalType: GoalType | null;
   goalTotalDays: number | null;
   weightHistory: WeightEntry[];
   meals: LoggedMeal[];
+  favoriteFoodIds: string[];
   waterGlassesByDate: Record<string, number>;
 };
 
 export type OnboardingWizardState = {
-  step: 1 | 2 | 3 | 4 | 5 | 6;
+  step: 1 | 2 | 3 | 4 | 5;
   userName: string;
   gender: Gender;
   weightKg: number | null;
@@ -69,7 +69,6 @@ export type OnboardingWizardState = {
   bodyFatPct: number | null;
   heightCm: number | null;
   activity: Activity | null;
-  goalType: GoalType | null;
 };
 
 export type OnboardingProfile = {
@@ -81,7 +80,16 @@ export type OnboardingProfile = {
   gender: Gender;
   bodyFatPct: number;
   activity: Activity;
-  goalType: GoalType;
+  goalTotalDays: number | null;
+};
+
+export type PlanSettingsUpdate = {
+  userName: string | null;
+  gender: Gender;
+  bodyFatPct: number;
+  activity: Activity;
+  goalWeightKg: number;
+  proteinTargetG: number;
   goalTotalDays: number | null;
 };
 
@@ -105,10 +113,12 @@ export type PSMFAppStore = {
   hydrate: () => Promise<void>;
   clearStore: () => Promise<void>;
   saveOnboardingProfile: (profile: OnboardingProfile) => Promise<void>;
+  updatePlanSettings: (input: PlanSettingsUpdate) => Promise<void>;
   setGoalWeightKg: (goalWeightKg: number) => Promise<void>;
   setDismissedProteinChangeKey: (key: string | null) => Promise<void>;
   saveWeightEntry: (kg: number, date: string) => Promise<void>;
   saveMeal: (meal: LoggedMeal) => Promise<void>;
   deleteMeal: (mealId: string) => Promise<void>;
+  toggleFavoriteFood: (foodId: string) => Promise<void>;
   setWaterGlasses: (date: string, count: number) => Promise<void>;
 };

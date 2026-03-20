@@ -43,15 +43,14 @@ export type OnboardingPreview = ProteinPreview & {
   projection: GoalProjection;
 };
 
-const STEP_SEQUENCE: OnboardingStep[] = [1, 2, 3, 4, 5, 6];
+const STEP_SEQUENCE: OnboardingStep[] = [1, 2, 3, 4, 5];
 
 const STEP_ROUTES: Record<OnboardingStep, Href> = {
   1: "/onboarding/welcome",
-  2: "/onboarding/goal",
-  3: "/onboarding/basics",
-  4: "/onboarding/body-fat",
-  5: "/onboarding/activity",
-  6: "/onboarding/summary",
+  2: "/onboarding/basics",
+  3: "/onboarding/body-fat",
+  4: "/onboarding/activity",
+  5: "/onboarding/summary",
 };
 
 export const ONBOARDING_STEP_COUNT = STEP_SEQUENCE.length;
@@ -67,7 +66,6 @@ export const INITIAL_ONBOARDING_STATE: OnboardingWizardState = {
   bodyFatPct: null,
   heightCm: null,
   activity: null,
-  goalType: null,
 };
 
 export function getRouteForStep(step: OnboardingStep) {
@@ -196,38 +194,32 @@ export function isStepValid(state: OnboardingWizardState, step: OnboardingStep) 
     case 1:
       return true;
     case 2:
-      return state.goalType !== null;
-    case 3:
       return isGoalWeightValid(state.weightKg, state.goalWeightKg);
-    case 4:
+    case 3:
       return resolveBodyFatPct(state) !== null;
-    case 5: {
+    case 4: {
       const preview = buildOnboardingPreview(state);
       return state.activity !== null && preview?.projection.status !== "invalid";
     }
-    case 6:
+    case 5:
       return buildOnboardingProfile(state) !== null;
   }
 }
 
 export function getFirstIncompleteStep(state: OnboardingWizardState): OnboardingStep {
-  if (state.goalType === null) {
+  if (!isGoalWeightValid(state.weightKg, state.goalWeightKg)) {
     return 2;
   }
 
-  if (!isGoalWeightValid(state.weightKg, state.goalWeightKg)) {
+  if (resolveBodyFatPct(state) === null) {
     return 3;
   }
 
-  if (resolveBodyFatPct(state) === null) {
+  if (state.activity === null) {
     return 4;
   }
 
-  if (state.activity === null) {
-    return 5;
-  }
-
-  return 6;
+  return 5;
 }
 
 export function buildProteinPreview(state: OnboardingWizardState): ProteinPreview | null {
@@ -272,7 +264,7 @@ export function buildProteinPreview(state: OnboardingWizardState): ProteinPrevie
 export function buildOnboardingPreview(
   state: OnboardingWizardState,
 ): OnboardingPreview | null {
-  if (state.goalType === null || !isGoalWeightValid(state.weightKg, state.goalWeightKg)) {
+  if (!isGoalWeightValid(state.weightKg, state.goalWeightKg)) {
     return null;
   }
 
@@ -309,8 +301,7 @@ export function buildOnboardingProfile(
     preview.projection.status === "invalid" ||
     !isWeightValid(state.weightKg) ||
     !isGoalWeightValid(state.weightKg, state.goalWeightKg) ||
-    state.activity === null ||
-    state.goalType === null
+    state.activity === null
   ) {
     return null;
   }
@@ -326,7 +317,6 @@ export function buildOnboardingProfile(
     gender: state.gender,
     bodyFatPct: preview.bodyFatPct,
     activity: state.activity,
-    goalType: state.goalType,
     goalTotalDays: preview.goalTotalDays,
   };
 }

@@ -1,13 +1,13 @@
-import { useState } from "react";
 import { router } from "expo-router";
+import { useState } from "react";
 import { Alert, Text, View } from "react-native";
 
 import { DashboardHeader } from "@/src/components/dashboard/dashboard-header";
 import { MealBuilderSheet } from "@/src/components/dashboard/meal-builder-sheet";
-import { ProteinTargetChangeBanner } from "@/src/components/dashboard/protein-target-change-banner";
-import { ProteinTargetExplanationSheet } from "@/src/components/dashboard/protein-target-explanation-sheet";
 import { MealsSection } from "@/src/components/dashboard/meals-section";
 import { ProgressMetricCard } from "@/src/components/dashboard/progress-metric-card";
+import { ProteinTargetChangeBanner } from "@/src/components/dashboard/protein-target-change-banner";
+import { ProteinTargetExplanationSheet } from "@/src/components/dashboard/protein-target-explanation-sheet";
 import { WaterTrackerCard } from "@/src/components/dashboard/water-tracker-card";
 import { WeightEntryCard } from "@/src/components/dashboard/weight-entry-card";
 import { WeightEntrySheet } from "@/src/components/dashboard/weight-entry-sheet";
@@ -16,6 +16,7 @@ import { EmptyState } from "@/src/components/ui/empty-state";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
 import { Screen } from "@/src/components/ui/screen";
 import { SectionHeader } from "@/src/components/ui/section-header";
+import { useToday } from "@/src/hooks/use-today";
 import {
   formatWeightKg,
   getDayLabel,
@@ -24,12 +25,12 @@ import {
   getWeightDelta,
 } from "@/src/lib/dashboard";
 import { formatProjectedDays } from "@/src/lib/projection";
-import { calcWaterTargetGlasses } from "@/src/lib/psmf";
-import { useToday } from "@/src/hooks/use-today";
+import { calcWaterTargetLiters } from "@/src/lib/psmf";
 import { usePsmfStore } from "@/src/store/psmf-store";
 import {
   selectCaloriesConsumed,
   selectCurrentProtocolContext,
+  selectCurrentWeightKg,
   selectEstimatedCalorieTarget,
   selectGoalProgress,
   selectGoalProjection,
@@ -41,7 +42,6 @@ import {
   selectProteinTargetChangeBanner,
   selectProtocolProgress,
   selectTodayEntry,
-  selectWaterGlasses,
 } from "@/src/store/selectors";
 import type { LoggedMeal } from "@/src/types/app";
 
@@ -54,7 +54,6 @@ export default function HomeRoute() {
   const saveWeightEntry = usePsmfStore((store) => store.saveWeightEntry);
   const saveMeal = usePsmfStore((store) => store.saveMeal);
   const deleteMeal = usePsmfStore((store) => store.deleteMeal);
-  const setWaterGlasses = usePsmfStore((store) => store.setWaterGlasses);
   const setDismissedProteinChangeKey = usePsmfStore(
     (store) => store.setDismissedProteinChangeKey,
   );
@@ -69,14 +68,14 @@ export default function HomeRoute() {
     return (
       <Screen>
         <SectionHeader
-          description="Zavrsi nekoliko kratkih koraka da izracunamo tvoj dnevni cilj proteina."
+          description="Završi nekoliko kratkih koraka da izračunamo tvoj dnevni cilj proteina."
           eyebrow="Danas"
-          title="Zavrsi onboarding"
+          title="Završi onboarding"
         />
         <EmptyState
-          badge="Pocetak"
-          description="Kad potvrdis onboarding, ovde ces pratiti proteine, obroke, vodu i jutarnju tezinu."
-          title="Jos nemas aktivan plan"
+          badge="Početak"
+          description="Kad potvrdiš onboarding, ovde ćeš pratiti proteine, obroke i jutarnju težinu."
+          title="Još nemaš aktivan plan"
         />
         <PrimaryButton
           label="Idi na onboarding"
@@ -87,6 +86,7 @@ export default function HomeRoute() {
   }
 
   const currentProtocolContext = selectCurrentProtocolContext(data);
+  const currentWeightKg = selectCurrentWeightKg(data) ?? data.startingWeightKg ?? 0;
   const proteinTarget = currentProtocolContext?.proteinTargetG ?? 0;
   const calorieTarget = selectEstimatedCalorieTarget(data) ?? 0;
   const proteinConsumed = selectProteinConsumed(data, today);
@@ -100,11 +100,10 @@ export default function HomeRoute() {
   const proteinTargetChangeBanner = selectProteinTargetChangeBanner(data, today);
   const nextCategoryThreshold = selectNextCategoryThreshold(data);
   const todayWeightDelta = getWeightDelta(todayEntry, previousEntry);
-  const waterGlasses = selectWaterGlasses(data, today);
-  const waterTarget =
-    data.startingWeightKg === null ? 8 : calcWaterTargetGlasses(data.startingWeightKg);
+  const waterTargetLiters = calcWaterTargetLiters(currentWeightKg);
   const proteinProgress = proteinTarget === 0 ? 0 : proteinConsumed / proteinTarget;
   const calorieProgress = calorieTarget === 0 ? 0 : caloriesConsumed / calorieTarget;
+  const addMealLabel = meals.length ? "Dodaj još jedan obrok" : "Dodaj prvi obrok";
   const headerProgress = goalProgress?.progress ?? protocol.progress;
   const dayLabel =
     data.goalWeightKg !== null
@@ -122,8 +121,8 @@ export default function HomeRoute() {
       await saveWeightEntry(kg, today);
     } catch {
       showAlert(
-        "Greska pri cuvanju",
-        "Nismo uspeli da sacuvamo danasnju tezinu. Pokusaj ponovo.",
+        "Greška pri čuvanju",
+        "Nismo uspeli da sačuvamo današnju težinu. Pokušaj ponovo.",
       );
       throw new Error("save-weight-failed");
     }
@@ -135,8 +134,8 @@ export default function HomeRoute() {
       setEditingMeal(null);
     } catch {
       showAlert(
-        "Greska pri cuvanju",
-        "Nismo uspeli da sacuvamo obrok. Pokusaj ponovo.",
+        "Greška pri čuvanju",
+        "Nismo uspeli da sačuvamo obrok. Pokušaj ponovo.",
       );
       throw new Error("save-meal-failed");
     }
@@ -151,12 +150,12 @@ export default function HomeRoute() {
 
   function handleDeleteMeal(meal: LoggedMeal) {
     Alert.alert(
-      "Obrisi obrok",
-      `Da li sigurno zelis da obrises "${meal.name}"?`,
+      "Obriši obrok",
+      `Da li sigurno želiš da obrišeš "${meal.name}"?`,
       [
-        { text: "Otkazi", style: "cancel" },
+        { text: "Otkaži", style: "cancel" },
         {
-          text: "Obrisi",
+          text: "Obriši",
           style: "destructive",
           onPress: () => {
             void deleteMeal(meal.id);
@@ -186,57 +185,42 @@ export default function HomeRoute() {
         />
       ) : null}
 
-      {data.goalWeightKg === null ? (
-        <Card className="gap-4 border-warning/30 bg-surface">
-          <View className="gap-1">
-            <Text className="text-sm font-semibold uppercase tracking-[1.8px] text-warning">
-              Dodaj ciljnu tezinu
-            </Text>
-            <Text className="text-2xl font-black text-text">
-              Aktiviraj projekciju do cilja
-            </Text>
-          </View>
-          <Text className="text-sm leading-6 text-muted">
-            Kad uneses ciljnu tezinu, videces procenu koliko dugo traje do cilja i graf koji se azurira sa svakom novom jutarnjom tezinom.
+      <View className="gap-3">
+        <View className="gap-1">
+          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
+            Današnji fokus
           </Text>
-          <PrimaryButton
-            label="Podesi ciljnu tezinu"
-            onPress={() => router.push("../settings")}
-            variant="secondary"
-          />
-        </Card>
-      ) : null}
+          <Text className="text-sm leading-6 text-muted">
+            Pogodi dnevni cilj proteina i zabeleži jutarnju težinu. Ostalo je
+            pomoćno.
+          </Text>
+        </View>
 
-      <View className="flex-row gap-3">
         <ProgressMetricCard
-          captionLabel="Auto po jutarnjoj tezini"
+          captionLabel="Automatski po jutarnjoj težini"
           percentLabel={`${Math.round(proteinProgress * 100)}%`}
           progress={proteinProgress}
-          targetLabel={`od ${proteinTarget}g danas`}
+          targetLabel={`od ${proteinTarget} g danas`}
           title="Proteini"
           tone="protein"
-          valueLabel={`${proteinConsumed}g`}
+          valueLabel={`${proteinConsumed} g`}
         />
-        <ProgressMetricCard
-          percentLabel={`${Math.round(calorieProgress * 100)}%`}
-          progress={calorieProgress}
-          targetLabel={`od ${calorieTarget}`}
-          title="Kalorije"
-          tone="calories"
-          valueLabel={`${caloriesConsumed}`}
+
+        <PrimaryButton
+          label={addMealLabel}
+          onPress={() => {
+            setEditingMeal(null);
+            setMealSheetOpen(true);
+          }}
+          variant="secondary"
+        />
+
+        <WeightEntryCard
+          deltaKg={todayWeightDelta}
+          onPress={() => setWeightSheetOpen(true)}
+          todayWeightKg={todayEntry?.kg ?? null}
         />
       </View>
-
-      <WaterTrackerCard
-        currentGlasses={waterGlasses}
-        onDecrease={() => {
-          void setWaterGlasses(today, Math.max(0, waterGlasses - 1));
-        }}
-        onIncrease={() => {
-          void setWaterGlasses(today, waterGlasses + 1);
-        }}
-        targetGlasses={waterTarget}
-      />
 
       <MealsSection
         meals={meals}
@@ -252,11 +236,49 @@ export default function HomeRoute() {
         proteinConsumed={proteinConsumed}
       />
 
-      <WeightEntryCard
-        deltaKg={todayWeightDelta}
-        onPress={() => setWeightSheetOpen(true)}
-        todayWeightKg={todayEntry?.kg ?? null}
-      />
+      {data.goalWeightKg === null ? (
+        <Card className="gap-4 border-warning/30 bg-surface">
+          <View className="gap-1">
+            <Text className="text-sm font-semibold uppercase tracking-[1.8px] text-warning">
+              Dodaj ciljnu težinu
+            </Text>
+            <Text className="text-2xl font-black text-text">
+              Aktiviraj projekciju do cilja
+            </Text>
+          </View>
+          <Text className="text-sm leading-6 text-muted">
+            Kad uneseš ciljnu težinu, videćeš procenu koliko traje do cilja i grafikon
+            koji se ažurira sa svakom novom jutarnjom težinom.
+          </Text>
+          <PrimaryButton
+            label="Podesi ciljnu težinu"
+            onPress={() => router.push("../settings")}
+            variant="secondary"
+          />
+        </Card>
+      ) : null}
+
+      <View className="gap-3">
+        <View className="gap-1">
+          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
+            Dodatno danas
+          </Text>
+          <Text className="text-sm leading-6 text-muted">
+            Kalorije i voda su pomoćni signali, dok su proteini i jutarnja
+            težina prioritet.
+          </Text>
+        </View>
+
+        <ProgressMetricCard
+          percentLabel={`${Math.round(calorieProgress * 100)}%`}
+          progress={calorieProgress}
+          targetLabel={`od ${calorieTarget} kcal`}
+          title="Kalorije"
+          tone="calories"
+          valueLabel={`${caloriesConsumed} kcal`}
+        />
+        <WaterTrackerCard targetLiters={waterTargetLiters} weightKg={currentWeightKg} />
+      </View>
 
       <WeightEntrySheet
         onOpenChange={setWeightSheetOpen}

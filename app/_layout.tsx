@@ -29,11 +29,11 @@ export default function RootLayout() {
         <Screen contentClassName="items-center justify-center gap-6" scroll={false}>
           <Card className="w-full max-w-[420px] gap-3">
             <Text className="text-xs font-semibold uppercase tracking-[2px] text-warning">
-              Ucitavanje
+              Učitavanje
             </Text>
             <Text className="text-3xl font-black text-text">{APP_NAME}</Text>
             <Text className="text-base leading-6 text-muted">
-              Ucitavamo tvoj lokalni plan i pripremamo aplikaciju za danasnji unos.
+              Učitavamo tvoj lokalni plan i pripremamo aplikaciju za današnji unos.
             </Text>
           </Card>
         </Screen>

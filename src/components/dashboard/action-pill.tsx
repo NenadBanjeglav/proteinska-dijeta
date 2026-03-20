@@ -1,6 +1,7 @@
 import { Pressable, Text } from "react-native";
 
 import { cn } from "@/src/lib/cn";
+import { triggerHaptic, type AppHaptic } from "@/src/lib/haptics";
 
 type ActionPillVariant = "accent" | "muted" | "danger";
 
@@ -9,6 +10,7 @@ type ActionPillProps = {
   onPress: () => void;
   variant?: ActionPillVariant;
   disabled?: boolean;
+  haptic?: AppHaptic;
 };
 
 const WRAPPER_STYLES: Record<ActionPillVariant, string> = {
@@ -28,16 +30,22 @@ export function ActionPill({
   onPress,
   variant = "muted",
   disabled = false,
+  haptic = "selection",
 }: ActionPillProps) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
       className={cn(
-        "min-h-[40px] min-w-[40px] items-center justify-center rounded-2xl px-4",
+        "min-h-[48px] min-w-[48px] items-center justify-center rounded-2xl px-4",
         WRAPPER_STYLES[variant],
         disabled && "opacity-40",
       )}
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => {
+        triggerHaptic(haptic);
+        onPress();
+      }}
     >
       <Text className={cn("text-sm font-bold", TEXT_STYLES[variant])}>{label}</Text>
     </Pressable>

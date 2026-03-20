@@ -80,10 +80,10 @@ function getReferenceLabel(referenceEntry: WeightEntry | null, today: string) {
   }
 
   if (referenceEntry.date === today) {
-    return "Startna tezina";
+    return "Startna težina";
   }
 
-  return `Poslednji unos - ${referenceEntry.date}`;
+  return `Poslednji unos • ${referenceEntry.date}`;
 }
 
 export function WeightEntrySheet({
@@ -142,12 +142,12 @@ export function WeightEntrySheet({
     <BottomSheet
       onOpenChange={onOpenChange}
       open={open}
-      title={todayWeightKg === null ? "Unesi jutarnju tezinu" : "Izmeni jutarnju tezinu"}
+      title={todayWeightKg === null ? "Unesi jutarnju težinu" : "Izmeni jutarnju težinu"}
     >
       <View className="gap-4">
         <InfoCallout
-          description="Meri se odmah po budjenju, posle toaleta, pre hrane i vode. Tako je trend najcistiji."
-          title="Najtacnije merenje"
+          description="Meri se odmah po buđenju, posle toaleta, pre hrane i vode. Tako je trend najčistiji."
+          title="Najtačnije merenje"
           tone="warning"
         />
 
@@ -162,13 +162,13 @@ export function WeightEntrySheet({
             {previousEntry ? formatWeightKg(previousEntry.kg) : "-"}
           </Text>
           <Text className="text-sm leading-6 text-muted">
-            Ovaj unos cuvamo kao jutarnju tezinu za datum {today}.
+            Ovaj unos čuvamo kao jutarnju težinu za datum {today}.
           </Text>
         </Card>
 
         <Card className="gap-3 border-warning bg-surface-strong px-5 py-6">
           <Text className="text-center text-xs font-semibold uppercase tracking-[1.8px] text-warning">
-            Jutarnja tezina
+            Jutarnja težina
           </Text>
           <View className="flex-row items-end justify-center gap-3">
             <TextInput
@@ -186,8 +186,8 @@ export function WeightEntrySheet({
           </View>
           <Text className="text-center text-sm leading-6 text-muted">
             {isOutOfRange
-              ? `Unesi broj izmedju ${MIN_WEIGHT_KG} i ${MAX_WEIGHT_KG} kg.`
-              : "Upisi tezinu direktno. Cuvamo vrednost sa jednom decimalom."}
+              ? `Unesi broj između ${MIN_WEIGHT_KG} i ${MAX_WEIGHT_KG} kg.`
+              : "Upiši težinu direktno. Čuvamo vrednost sa jednom decimalom."}
           </Text>
         </Card>
 
@@ -223,13 +223,15 @@ export function WeightEntrySheet({
         <View className="gap-3 pt-1">
           <PrimaryButton
             disabled={!canSave}
-            label={todayWeightKg === null ? "Sacuvaj jutarnju tezinu" : "Sacuvaj izmenu"}
+            haptic="success"
+            label={todayWeightKg === null ? "Sačuvaj jutarnju težinu" : "Sačuvaj izmenu"}
             loading={isSaving}
             onPress={() => {
               void handleSave();
             }}
           />
           <PrimaryButton
+            haptic="none"
             label="Zatvori"
             onPress={() => onOpenChange(false)}
             variant="ghost"

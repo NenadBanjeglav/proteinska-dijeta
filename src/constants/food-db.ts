@@ -12,7 +12,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "chicken-breast-raw",
-    label: "Pileca prsa bez koze",
+    label: "Pileća prsa bez kože",
     kind: "protein",
     priority: "tierA",
     basis: "raw",
@@ -21,7 +21,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "turkey-breast-raw",
-    label: "Cureca prsa bez koze",
+    label: "Ćureća prsa bez kože",
     kind: "protein",
     priority: "tierA",
     basis: "raw",
@@ -30,7 +30,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "hake",
-    label: "Oslic",
+    label: "Oslić",
     kind: "protein",
     priority: "tierA",
     basis: "raw",
@@ -48,7 +48,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "ella-cheese",
-    label: "Ella sir / obrani svezi sir",
+    label: "Ella sir / obrani sveži sir",
     kind: "protein",
     priority: "tierA",
     basis: "asPackaged",
@@ -57,7 +57,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "greek-yogurt-0",
-    label: "Grcki ili proteinski jogurt 0%",
+    label: "Grčki ili proteinski jogurt 0%",
     kind: "protein",
     priority: "tierA",
     basis: "asPackaged",
@@ -102,7 +102,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "shrimp",
-    label: "Skampi",
+    label: "Škampi",
     kind: "protein",
     priority: "tierB",
     basis: "raw",
@@ -129,7 +129,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "beef-jerky",
-    label: "Juneci jerky",
+    label: "Juneći jerky",
     kind: "protein",
     priority: "limited",
     basis: "asPackaged",
@@ -138,7 +138,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "mushrooms",
-    label: "Pecurke",
+    label: "Pečurke",
     kind: "vegetable",
     priority: "tierA",
     basis: "raw",
@@ -192,7 +192,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "baby-spinach",
-    label: "Baby spanac",
+    label: "Baby spanać",
     kind: "vegetable",
     priority: "tierA",
     basis: "raw",
@@ -255,7 +255,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "cherry-tomato",
-    label: "Ceri paradajz",
+    label: "Čeri paradajz",
     kind: "vegetable",
     priority: "tierB",
     basis: "raw",
@@ -300,7 +300,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "roasted-pepper-jar",
-    label: "Pecena paprika iz tegle",
+    label: "Pečena paprika iz tegle",
     kind: "vegetable",
     priority: "tierB",
     basis: "drained",
@@ -309,7 +309,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "jar-mushrooms",
-    label: "Sampinjoni iz tegle",
+    label: "Šampinjoni iz tegle",
     kind: "vegetable",
     priority: "tierB",
     basis: "drained",
@@ -318,7 +318,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "peas",
-    label: "Grasak",
+    label: "Grašak",
     kind: "vegetable",
     priority: "limited",
     basis: "raw",
@@ -336,7 +336,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "carrot",
-    label: "Sargarepa",
+    label: "Šargarepa",
     kind: "vegetable",
     priority: "limited",
     basis: "raw",
@@ -426,7 +426,7 @@ export const FOOD_DB: FoodItem[] = [
   },
   {
     id: "vinegar",
-    label: "Sirce",
+    label: "Sirće",
     kind: "condiment",
     priority: "condiment",
     basis: "asPackaged",

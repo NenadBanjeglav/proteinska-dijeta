@@ -44,7 +44,7 @@ function buildMilestones(points: GoalProjectionPoint[]): ChartMilestone[] {
   const milestones: ChartMilestone[] = [
     {
       key: `start-${first.day}`,
-      eyebrow: "Pocetak",
+      eyebrow: "Početak",
       value: "Danas",
     },
   ];
@@ -145,12 +145,12 @@ export function GoalProjectionChart({
 
   if (!chart) {
     return (
-      <View className="rounded-3xl border border-dashed border-border px-5 py-10">
-        <Text className="text-base leading-6 text-muted">
-          Kad procena bude spremna, ovde ces videti putanju do ciljne tezine.
-        </Text>
-      </View>
-    );
+        <View className="rounded-3xl border border-dashed border-border px-5 py-10">
+          <Text className="text-base leading-6 text-muted">
+            Kad procena bude spremna, ovde ćeš videti putanju do ciljne težine.
+          </Text>
+        </View>
+      );
   }
 
   const milestones = buildMilestones(chart.points);

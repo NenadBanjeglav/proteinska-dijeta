@@ -8,6 +8,9 @@ type MealSelectionSummaryProps = {
   label: string;
   grams: number;
   onEditAmount: () => void;
+  onDecreaseAmount?: () => void;
+  onIncreaseAmount?: () => void;
+  stepLabel?: string;
   onClear?: () => void;
 };
 
@@ -16,6 +19,9 @@ export function MealSelectionSummary({
   label,
   grams,
   onEditAmount,
+  onDecreaseAmount,
+  onIncreaseAmount,
+  stepLabel,
   onClear,
 }: MealSelectionSummaryProps) {
   return (
@@ -32,12 +38,26 @@ export function MealSelectionSummary({
           className="text-2xl font-black text-text"
           style={{ fontVariant: ["tabular-nums"] }}
         >
-          {grams}g
+          {grams} g
         </Text>
       </View>
 
       <View className="flex-row flex-wrap gap-2">
-        <ActionPill label="Promeni kolicinu" onPress={onEditAmount} variant="accent" />
+        {onDecreaseAmount ? (
+          <ActionPill
+            label={`-${stepLabel ?? "25 g"}`}
+            onPress={onDecreaseAmount}
+            variant="muted"
+          />
+        ) : null}
+        {onIncreaseAmount ? (
+          <ActionPill
+            label={`+${stepLabel ?? "25 g"}`}
+            onPress={onIncreaseAmount}
+            variant="accent"
+          />
+        ) : null}
+        <ActionPill label="Tačno g" onPress={onEditAmount} variant="muted" />
         {onClear ? <ActionPill label="Ukloni" onPress={onClear} variant="muted" /> : null}
       </View>
     </Card>

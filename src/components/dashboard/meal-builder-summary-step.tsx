@@ -46,7 +46,7 @@ export function MealBuilderSummaryStep({
         ))}
         <View className="border-t border-border pt-3">
           <Text className="text-sm leading-6 text-muted">
-            Protein neka ostane osnova obroka, povrce dodaj po potrebi, a dodatke koristi umereno.
+          Protein neka ostane osnova obroka, povrće dodaj po potrebi, a dodatke koristi umereno.
           </Text>
         </View>
         <View className="flex-row items-end justify-between gap-3">

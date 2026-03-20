@@ -25,16 +25,17 @@ export function MealsSection({
     <View className="gap-3">
       <View className="flex-row items-end justify-between gap-4">
         <View className="flex-1 gap-1">
-          <Text className="text-2xl font-bold text-text">Danasnji obroci</Text>
+          <Text className="text-xl font-bold text-text">Današnji obroci</Text>
           <Text className="text-sm text-muted">
             {getMealsSummary(meals.length, proteinConsumed)}
           </Text>
         </View>
 
         <ActionPill
+          haptic="light"
           label="+ Dodaj obrok"
           onPress={onAdd}
-          variant="accent"
+          variant="muted"
         />
       </View>
 
@@ -49,9 +50,9 @@ export function MealsSection({
         ))
       ) : (
         <Card className="gap-2">
-          <Text className="text-lg font-bold text-text">Jos nema obroka za danas</Text>
+          <Text className="text-lg font-bold text-text">Još nema obroka za danas</Text>
           <Text className="text-sm leading-6 text-muted">
-            Dodaj prvi obrok i prati koliko si se priblizio dnevnom proteinskom cilju.
+            Dodaj prvi obrok i prati koliko si se približio dnevnom proteinskom cilju.
           </Text>
         </Card>
       )}

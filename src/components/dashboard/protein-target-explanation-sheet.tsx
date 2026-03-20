@@ -42,18 +42,18 @@ export function ProteinTargetExplanationSheet({
     <BottomSheet
       onOpenChange={onOpenChange}
       open={open}
-      title="Kako racunamo danasnji cilj"
+      title="Kako računamo današnji cilj"
     >
       <View className="gap-4">
         <Card className="gap-2">
           <Text className="text-sm leading-6 text-muted">
-            Cilj se racuna po poslednjoj sacuvanoj jutarnjoj tezini, uz istu procenjenu
-            nemasnu masu iz onbordinga. Zato se broj menja kako mrsavis.
+            Cilj se računa po poslednjoj sačuvanoj jutarnjoj težini, uz istu
+            procenjenu nemasnu masu iz onboardinga. Zato se broj menja kako mršaviš.
           </Text>
         </Card>
 
         <MetricCard
-          hint="Procena iz trenutne jutarnje tezine i fiksne nemasne mase."
+          hint="Procena iz trenutne jutarnje težine i fiksne nemasne mase."
           label="Procena BF"
           value={
             currentContext ? `~${currentContext.estimatedBodyFatPct.toFixed(1)}%` : "Nedostupno"
@@ -71,27 +71,28 @@ export function ProteinTargetExplanationSheet({
               ? `Procena kalorija oko ${currentContext.calorieTarget} kcal`
               : undefined
           }
-          label="Danasnji cilj proteina"
+          label="Današnji cilj proteina"
           value={currentContext ? `${currentContext.proteinTargetG} g` : "Nedostupno"}
         />
 
         <Card className="gap-2">
           <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
-            Sledeca veca promena
+            Sledeća veća promena
           </Text>
           <Text className="text-base leading-7 text-text">
             {nextThreshold
-              ? `Oko ${nextThreshold.weightKg.toFixed(1)} kg ulazis u ${nextThreshold.targetCategoryLabel}.`
-              : "Sada si u Kategoriji 1, pa se cilj dalje menja postepeno sa svakom promenom tezine."}
+              ? `Oko ${nextThreshold.weightKg.toFixed(1)} kg ulaziš u ${nextThreshold.targetCategoryLabel}.`
+              : "Sada si u Kategoriji 1, pa se cilj dalje menja postepeno sa svakom promenom težine."}
           </Text>
           <Text className="text-sm leading-6 text-muted">
             {nextThreshold
               ? `Tada procena pada na oko ${nextThreshold.bodyFatPct}% BF i menja se opseg proteina.`
-              : "Nema sledece ostre granice, samo postepeno prilagodjavanje."}
+              : "Nema sledeće oštre granice, samo postepeno prilagođavanje."}
           </Text>
         </Card>
 
         <PrimaryButton
+          haptic="none"
           label="Zatvori"
           onPress={() => onOpenChange(false)}
           variant="ghost"

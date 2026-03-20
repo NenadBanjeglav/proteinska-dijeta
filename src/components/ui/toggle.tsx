@@ -26,6 +26,8 @@ export function Toggle<T extends string>({
 
           return (
             <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ selected: active }}
               key={option.value}
               className={cn(
                 "min-h-[52px] flex-1 items-center justify-center rounded-full px-4",

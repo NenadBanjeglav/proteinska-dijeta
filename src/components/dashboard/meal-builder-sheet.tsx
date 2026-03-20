@@ -1,12 +1,19 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 import { FoodAmountSheet } from "@/src/components/dashboard/food-amount-sheet";
 import { MealBuilderSupplementsStep } from "@/src/components/dashboard/meal-builder-supplements-step";
-import { MealFoodPicker, OptionalChoiceCard } from "@/src/components/dashboard/meal-food-picker";
+import {
+  MealFoodPicker,
+  OptionalChoiceCard,
+} from "@/src/components/dashboard/meal-food-picker";
 import { MealSelectionGroup } from "@/src/components/dashboard/meal-selection-group";
 import { BottomSheet } from "@/src/components/ui/bottom-sheet";
+import { Card } from "@/src/components/ui/card";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
+import { cn } from "@/src/lib/cn";
+import { triggerHaptic } from "@/src/lib/haptics";
 import {
   addMealSelection,
   buildLoggedMeal,
@@ -16,14 +23,20 @@ import {
   getAvailableMealSupplementDefinitions,
   getFoodsByKind,
   getMealSupplements,
+  getRecentFoodIdsByKind,
   getSelectionsFromMeal,
+  normalizeMealName,
   removeMealSelection,
   updateMealSelectionGrams,
   type MealSelection,
 } from "@/src/lib/meals";
-import type { FoodKind, LoggedMeal, MealSupplementKey, MealSupplements } from "@/src/types/app";
-
-type MealBuilderStep = 1 | 2 | 3 | 4;
+import { usePsmfStore } from "@/src/store/psmf-store";
+import type {
+  FoodKind,
+  LoggedMeal,
+  MealSupplementKey,
+  MealSupplements,
+} from "@/src/types/app";
 
 type MealAmountTarget = {
   kind: FoodKind;
@@ -31,6 +44,8 @@ type MealAmountTarget = {
   mode: "new" | "edit";
   initialGrams: number;
 } | null;
+
+type MealSectionKey = "protein" | "vegetable" | "condiment" | "supplements";
 
 type MealBuilderSheetProps = {
   open: boolean;
@@ -51,28 +66,47 @@ const DEFAULT_GRAMS: Record<FoodKind, number> = {
   condiment: 20,
 };
 
-const STEP_COPY: Record<MealBuilderStep, { title: string; description: string }> = {
-  1: {
-    title: "1. Protein",
+const SECTION_OPTIONS: {
+  key: MealSectionKey;
+  label: string;
+  title: string;
+  description: string;
+  iconSet: "ion" | "material";
+  icon: string;
+}[] = [
+  {
+    key: "protein",
+    label: "Protein",
+    title: "Protein",
     description: "Izaberi proteinske izvore i unesi grame direktno za svaki izbor.",
+    iconSet: "material",
+    icon: "food-steak",
   },
-  2: {
-    title: "2. Povrce",
-    description: "Dodaj povrce po potrebi ili ostavi ovaj obrok bez povrca.",
+  {
+    key: "vegetable",
+    label: "Povrće",
+    title: "Povrće",
+    description: "Dodaj povrće po potrebi ili ostavi ovaj obrok bez povrća.",
+    iconSet: "ion",
+    icon: "leaf-outline",
   },
-  3: {
-    title: "3. Dozvoljeni dodaci",
-    description: "Dodaj manje zacine i dodatke koji ostaju u okviru protokola.",
+  {
+    key: "condiment",
+    label: "Dodaci",
+    title: "Dodaci",
+    description: "Dodaj manje začine i dodatke koji ostaju u okviru protokola.",
+    iconSet: "material",
+    icon: "soy-sauce",
   },
-  4: {
-    title: "4. Suplementi",
-    description: "Oznaci sta ide uz ovaj obrok i sta je ostalo od dnevnih suplemenata.",
+  {
+    key: "supplements",
+    label: "Suplementi",
+    title: "Suplementi",
+    description: "Označi šta ide uz ovaj obrok i šta je ostalo od dnevnih suplemenata.",
+    iconSet: "material",
+    icon: "pill-multiple",
   },
-};
-
-function StepDot({ active }: { active: boolean }) {
-  return <View className={`h-2.5 flex-1 rounded-full ${active ? "bg-accent" : "bg-surface-soft"}`} />;
-}
+];
 
 function buildSelectionItems(selections: MealSelection[]) {
   return selections
@@ -90,20 +124,94 @@ function buildSelectionItems(selections: MealSelection[]) {
     .filter((item): item is MealSelection & { label: string } => item !== null);
 }
 
-function getPrimaryLabel(step: MealBuilderStep, isEditing: boolean) {
-  if (step === 1) {
-    return "Dalje na povrce";
-  }
+function SectionCopy({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <View className="gap-1">
+      <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-warning">
+        {title}
+      </Text>
+      <Text className="text-sm leading-6 text-muted">{description}</Text>
+    </View>
+  );
+}
 
-  if (step === 2) {
-    return "Dalje na dodatke";
-  }
+function SectionTabs({
+  value,
+  onChange,
+  counts,
+}: {
+  value: MealSectionKey;
+  onChange: (value: MealSectionKey) => void;
+  counts: Record<MealSectionKey, number>;
+}) {
+  return (
+    <View className="gap-2">
+      <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
+        Sekcije
+      </Text>
 
-  if (step === 3) {
-    return "Dalje na suplemente";
-  }
+      <View className="flex-row flex-wrap gap-2">
+        {SECTION_OPTIONS.map((option) => {
+          const active = option.key === value;
+          const iconColor = active ? "#0F172A" : "#CBD5E1";
 
-  return isEditing ? "Sacuvaj izmenu" : "Dodaj obrok";
+          return (
+            <Pressable
+              key={option.key}
+              accessibilityLabel={option.label}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              className={cn(
+                "min-h-[56px] min-w-[56px] flex-row items-center justify-center gap-2 rounded-full border px-4 py-3",
+                active
+                  ? "border-accent bg-accent"
+                  : "border-border bg-surface-soft",
+              )}
+              onPress={() => {
+                triggerHaptic("selection");
+                onChange(option.key);
+              }}
+            >
+              {option.iconSet === "material" ? (
+                <MaterialCommunityIcons
+                  color={iconColor}
+                  name={option.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+                  size={20}
+                />
+              ) : (
+                <Ionicons
+                  color={iconColor}
+                  name={option.icon as keyof typeof Ionicons.glyphMap}
+                  size={20}
+                />
+              )}
+              <View
+                className={cn(
+                  "min-w-[22px] rounded-full px-2 py-0.5",
+                  active ? "bg-black/15" : "bg-background/80",
+                )}
+              >
+                <Text
+                  className={cn(
+                    "text-center text-xs font-black",
+                    active ? "text-text" : "text-muted",
+                  )}
+                >
+                  {counts[option.key]}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
 }
 
 export function MealBuilderSheet({
@@ -114,13 +222,17 @@ export function MealBuilderSheet({
   meal = null,
   onSave,
 }: MealBuilderSheetProps) {
-  const [step, setStep] = useState<MealBuilderStep>(1);
+  const allMeals = usePsmfStore((store) => store.data.meals);
+  const favoriteFoodIds = usePsmfStore((store) => store.data.favoriteFoodIds);
+  const toggleFavoriteFood = usePsmfStore((store) => store.toggleFavoriteFood);
   const [proteins, setProteins] = useState<MealSelection[]>([]);
   const [vegetables, setVegetables] = useState<MealSelection[]>([]);
   const [condiments, setCondiments] = useState<MealSelection[]>([]);
   const [supplements, setSupplements] = useState<MealSupplements>(
     createEmptyMealSupplements(),
   );
+  const [draftName, setDraftName] = useState("");
+  const [activeSection, setActiveSection] = useState<MealSectionKey>("protein");
   const [isSaving, setIsSaving] = useState(false);
   const [amountTarget, setAmountTarget] = useState<MealAmountTarget>(null);
 
@@ -129,11 +241,12 @@ export function MealBuilderSheet({
       return;
     }
 
-    setStep(1);
     setProteins(getSelectionsFromMeal(meal, "protein"));
     setVegetables(getSelectionsFromMeal(meal, "vegetable"));
     setCondiments(getSelectionsFromMeal(meal, "condiment"));
     setSupplements(getMealSupplements(meal));
+    setDraftName(meal?.customName ?? "");
+    setActiveSection("protein");
     setIsSaving(false);
     setAmountTarget(null);
   }, [meal, open]);
@@ -150,18 +263,42 @@ export function MealBuilderSheet({
       vegetables,
       condiments,
       supplements,
+      customName: draftName,
       existingMeal: meal,
     });
-  }, [condiments, date, meal, mealsForDate, proteins, supplements, vegetables]);
+  }, [condiments, date, draftName, meal, mealsForDate, proteins, supplements, vegetables]);
 
   const proteinItems = useMemo(() => buildSelectionItems(proteins), [proteins]);
   const vegetableItems = useMemo(() => buildSelectionItems(vegetables), [vegetables]);
   const condimentItems = useMemo(() => buildSelectionItems(condiments), [condiments]);
 
+  const sectionCounts = useMemo(
+    () => ({
+      protein: proteinItems.length,
+      vegetable: vegetableItems.length,
+      condiment: condimentItems.length,
+      supplements: Object.values(supplements).filter(Boolean).length,
+    }),
+    [condimentItems.length, proteinItems.length, supplements, vegetableItems.length],
+  );
+
+  const activeSectionConfig = SECTION_OPTIONS.find((option) => option.key === activeSection)!;
+
   const availableSupplementDefinitions = useMemo(
-    () =>
-      getAvailableMealSupplementDefinitions(mealsForDate, meal?.id, supplements),
+    () => getAvailableMealSupplementDefinitions(mealsForDate, meal?.id, supplements),
     [meal?.id, mealsForDate, supplements],
+  );
+  const recentProteinIds = useMemo(
+    () => getRecentFoodIdsByKind(allMeals, "protein"),
+    [allMeals],
+  );
+  const recentVegetableIds = useMemo(
+    () => getRecentFoodIdsByKind(allMeals, "vegetable"),
+    [allMeals],
+  );
+  const recentCondimentIds = useMemo(
+    () => getRecentFoodIdsByKind(allMeals, "condiment"),
+    [allMeals],
   );
 
   function updateSelections(
@@ -205,8 +342,16 @@ export function MealBuilderSheet({
   }
 
   function handleSelectFood(kind: FoodKind, foodId: string) {
-    const mode = findMealSelection(getSelections(kind), foodId) ? "edit" : "new";
-    openAmountSheet(kind, foodId, mode);
+    const existingSelection = findMealSelection(getSelections(kind), foodId);
+
+    if (!existingSelection) {
+      updateSelections(kind, (current) =>
+        addMealSelection(current, foodId, DEFAULT_GRAMS[kind]),
+      );
+      return;
+    }
+
+    openAmountSheet(kind, foodId, "edit");
   }
 
   function handleSaveGrams(grams: number) {
@@ -232,6 +377,22 @@ export function MealBuilderSheet({
     }
   }
 
+  function adjustSelectionAmount(kind: FoodKind, foodId: string, delta: number) {
+    updateSelections(kind, (current) => {
+      const selection = findMealSelection(current, foodId);
+      if (!selection) {
+        return current;
+      }
+
+      const nextGrams = selection.grams + delta;
+      if (nextGrams <= 0) {
+        return removeMealSelection(current, foodId);
+      }
+
+      return updateMealSelectionGrams(current, foodId, nextGrams);
+    });
+  }
+
   function toggleSupplement(key: MealSupplementKey) {
     setSupplements((current) => ({
       ...current,
@@ -253,18 +414,125 @@ export function MealBuilderSheet({
     }
   }
 
-  function handlePrimaryAction() {
-    if (step === 4) {
-      void handleSave();
-      return;
+  function renderActiveSection() {
+    if (activeSection === "protein") {
+      return (
+        <View className="gap-4">
+          <SectionCopy
+            description={activeSectionConfig.description}
+            title={activeSectionConfig.title}
+          />
+          <MealSelectionGroup
+            items={proteinItems}
+            onAdjustAmount={(foodId, delta) => adjustSelectionAmount("protein", foodId, delta)}
+            onEditAmount={(foodId) => openAmountSheet("protein", foodId, "edit")}
+            onRemove={(foodId) => handleRemoveSelection("protein", foodId)}
+            stepSize={25}
+            title="Izabrani proteini"
+          />
+          <MealFoodPicker
+            defaultGrams={DEFAULT_GRAMS.protein}
+            favoriteFoodIds={favoriteFoodIds}
+            foods={PROTEIN_FOODS}
+            onSelect={(foodId) => handleSelectFood("protein", foodId)}
+            onToggleFavorite={(foodId) => {
+              void toggleFavoriteFood(foodId);
+            }}
+            recentFoodIds={recentProteinIds}
+            selectedFoodIds={proteins.map((selection) => selection.foodId)}
+          />
+        </View>
+      );
     }
 
-    setStep((current) => Math.min(4, current + 1) as MealBuilderStep);
+    if (activeSection === "vegetable") {
+      return (
+        <View className="gap-4">
+          <SectionCopy
+            description={activeSectionConfig.description}
+            title={activeSectionConfig.title}
+          />
+          <OptionalChoiceCard
+            label="Bez povrća u ovom obroku"
+            onPress={() => setVegetables([])}
+            selected={vegetables.length === 0}
+          />
+          <MealSelectionGroup
+            items={vegetableItems}
+            onAdjustAmount={(foodId, delta) => adjustSelectionAmount("vegetable", foodId, delta)}
+            onEditAmount={(foodId) => openAmountSheet("vegetable", foodId, "edit")}
+            onRemove={(foodId) => handleRemoveSelection("vegetable", foodId)}
+            stepSize={25}
+            title="Izabrano povrće"
+          />
+          <MealFoodPicker
+            defaultGrams={DEFAULT_GRAMS.vegetable}
+            favoriteFoodIds={favoriteFoodIds}
+            foods={VEGETABLE_FOODS}
+            onSelect={(foodId) => handleSelectFood("vegetable", foodId)}
+            onToggleFavorite={(foodId) => {
+              void toggleFavoriteFood(foodId);
+            }}
+            recentFoodIds={recentVegetableIds}
+            selectedFoodIds={vegetables.map((selection) => selection.foodId)}
+          />
+        </View>
+      );
+    }
+
+    if (activeSection === "supplements") {
+      return (
+        <View className="gap-4">
+          <SectionCopy
+            description={activeSectionConfig.description}
+            title={activeSectionConfig.title}
+          />
+          <MealBuilderSupplementsStep
+            availableKeys={availableSupplementDefinitions.map((definition) => definition.key)}
+            onToggle={toggleSupplement}
+            supplements={supplements}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <View className="gap-4">
+        <SectionCopy
+          description={activeSectionConfig.description}
+          title={activeSectionConfig.title}
+        />
+        <OptionalChoiceCard
+          label="Bez dodataka u ovom obroku"
+          onPress={() => setCondiments([])}
+          selected={condiments.length === 0}
+        />
+        <MealSelectionGroup
+          items={condimentItems}
+          onAdjustAmount={(foodId, delta) => adjustSelectionAmount("condiment", foodId, delta)}
+          onEditAmount={(foodId) => openAmountSheet("condiment", foodId, "edit")}
+          onRemove={(foodId) => handleRemoveSelection("condiment", foodId)}
+          stepSize={5}
+          title="Izabrani dodaci"
+        />
+        <MealFoodPicker
+          defaultGrams={DEFAULT_GRAMS.condiment}
+          favoriteFoodIds={favoriteFoodIds}
+          foods={CONDIMENT_FOODS}
+          onSelect={(foodId) => handleSelectFood("condiment", foodId)}
+          onToggleFavorite={(foodId) => {
+            void toggleFavoriteFood(foodId);
+          }}
+          recentFoodIds={recentCondimentIds}
+          selectedFoodIds={condiments.map((selection) => selection.foodId)}
+        />
+      </View>
+    );
   }
 
   const amountFood = findFoodItem(amountTarget?.foodId ?? null);
-  const canContinue =
-    step === 1 ? proteins.length > 0 : step === 4 ? !!previewMeal?.items.length : true;
+  const canSave = !!previewMeal?.items.length;
+  const customName = normalizeMealName(draftName);
 
   return (
     <>
@@ -274,7 +542,7 @@ export function MealBuilderSheet({
             <View className="flex-row items-end justify-between gap-3">
               <View className="gap-1">
                 <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
-                  Tekuci zbir
+                  Tekući zbir
                 </Text>
                 <Text className="text-sm text-muted">
                   {previewMeal?.name ?? "Obrok u pripremi"}
@@ -285,7 +553,7 @@ export function MealBuilderSheet({
                   className="text-2xl font-black text-text"
                   style={{ fontVariant: ["tabular-nums"] }}
                 >
-                  {previewMeal?.proteinG ?? 0}g
+                  {previewMeal?.proteinG ?? 0} g
                 </Text>
                 <Text className="text-sm text-muted">
                   {previewMeal?.calories ?? 0} kcal
@@ -294,108 +562,55 @@ export function MealBuilderSheet({
             </View>
 
             <PrimaryButton
-              disabled={!canContinue}
-              label={getPrimaryLabel(step, !!meal)}
-              loading={step === 4 && isSaving}
-              onPress={handlePrimaryAction}
+              disabled={!canSave}
+              haptic="success"
+              label={meal ? "Sačuvaj izmenu" : "Dodaj obrok"}
+              loading={isSaving}
+              onPress={() => {
+                void handleSave();
+              }}
             />
 
             <PrimaryButton
-              label={step === 1 ? "Zatvori" : "Nazad"}
-              onPress={() => {
-                if (step === 1) {
-                  onOpenChange(false);
-                  return;
-                }
-
-                setStep((current) => Math.max(1, current - 1) as MealBuilderStep);
-              }}
+              haptic="none"
+              label="Zatvori"
+              onPress={() => onOpenChange(false)}
               variant="ghost"
             />
           </View>
         }
         onOpenChange={onOpenChange}
         open={open}
+        stickyHeaderIndices={[1]}
         title={meal ? "Izmeni obrok" : "Dodaj obrok"}
       >
-        <View className="gap-4">
-          <View className="gap-3">
-            <View className="flex-row gap-2">
-              <StepDot active={step >= 1} />
-              <StepDot active={step >= 2} />
-              <StepDot active={step >= 3} />
-              <StepDot active={step >= 4} />
-            </View>
-            <Text className="text-xl font-bold text-text">{STEP_COPY[step].title}</Text>
-            <Text className="text-sm leading-6 text-muted">{STEP_COPY[step].description}</Text>
-          </View>
+        <Card className="mb-5 gap-3">
+          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
+            Naziv obroka nije obavezan
+          </Text>
+          <TextInput
+            className="rounded-3xl bg-surface-soft px-5 py-4 text-lg font-semibold text-text"
+            onChangeText={setDraftName}
+            placeholder="Ostavi prazno za automatski naziv"
+            placeholderTextColor="#6F7A90"
+            value={draftName}
+          />
+          <Text className="text-sm leading-6 text-muted">
+            {customName
+              ? `Koristićemo naziv "${customName}".`
+              : "Ako ostaviš prazno, naziv pravimo iz izabranih sastojaka."}
+          </Text>
+        </Card>
 
-          {step === 1 ? (
-            <>
-              <MealSelectionGroup
-                items={proteinItems}
-                onEditAmount={(foodId) => openAmountSheet("protein", foodId, "edit")}
-                onRemove={(foodId) => handleRemoveSelection("protein", foodId)}
-                title="Izabrani proteini"
-              />
-              <MealFoodPicker
-                foods={PROTEIN_FOODS}
-                onSelect={(foodId) => handleSelectFood("protein", foodId)}
-                selectedFoodIds={proteins.map((selection) => selection.foodId)}
-              />
-            </>
-          ) : null}
-
-          {step === 2 ? (
-            <>
-              <OptionalChoiceCard
-                label="Bez povrca u ovom obroku"
-                onPress={() => setVegetables([])}
-                selected={vegetables.length === 0}
-              />
-              <MealSelectionGroup
-                items={vegetableItems}
-                onEditAmount={(foodId) => openAmountSheet("vegetable", foodId, "edit")}
-                onRemove={(foodId) => handleRemoveSelection("vegetable", foodId)}
-                title="Izabrano povrce"
-              />
-              <MealFoodPicker
-                foods={VEGETABLE_FOODS}
-                onSelect={(foodId) => handleSelectFood("vegetable", foodId)}
-                selectedFoodIds={vegetables.map((selection) => selection.foodId)}
-              />
-            </>
-          ) : null}
-
-          {step === 3 ? (
-            <>
-              <OptionalChoiceCard
-                label="Bez dodataka u ovom obroku"
-                onPress={() => setCondiments([])}
-                selected={condiments.length === 0}
-              />
-              <MealSelectionGroup
-                items={condimentItems}
-                onEditAmount={(foodId) => openAmountSheet("condiment", foodId, "edit")}
-                onRemove={(foodId) => handleRemoveSelection("condiment", foodId)}
-                title="Izabrani dodaci"
-              />
-              <MealFoodPicker
-                foods={CONDIMENT_FOODS}
-                onSelect={(foodId) => handleSelectFood("condiment", foodId)}
-                selectedFoodIds={condiments.map((selection) => selection.foodId)}
-              />
-            </>
-          ) : null}
-
-          {step === 4 ? (
-            <MealBuilderSupplementsStep
-              availableKeys={availableSupplementDefinitions.map((definition) => definition.key)}
-              onToggle={toggleSupplement}
-              supplements={supplements}
-            />
-          ) : null}
+        <View className="-mx-6 mb-5 border-y border-border bg-surface px-6 py-3">
+          <SectionTabs
+            counts={sectionCounts}
+            onChange={setActiveSection}
+            value={activeSection}
+          />
         </View>
+
+        {renderActiveSection()}
       </BottomSheet>
 
       <FoodAmountSheet

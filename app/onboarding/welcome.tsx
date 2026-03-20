@@ -8,8 +8,8 @@ import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-ste
 import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
 
 const BENEFITS = [
-  "Dobijas dnevni cilj proteina prilagodjen telu, aktivnosti i cilju.",
-  "Odmah vidis grubu procenu koliko dugo traje put do ciljne tezine.",
+  "Dobijaš dnevni cilj proteina prilagođen telu, aktivnosti i cilju.",
+  "Odmah vidiš grubu procenu koliko dugo traje put do ciljne težine.",
   "Sve ostaje lokalno na telefonu, bez naloga i komplikacija.",
 ];
 
@@ -22,9 +22,9 @@ export default function WelcomeRoute() {
 
   return (
     <OnboardingStepScreen
-      description="Za manje od minuta izracunaj protein cilj i procenu koliko ti treba do ciljne tezine."
+      description="Za manje od minuta izračunaj proteinski cilj i procenu koliko ti treba do ciljne težine."
       onPrimaryPress={goNext}
-      primaryLabel="Izracunaj plan"
+      primaryLabel="Izračunaj plan"
       showBack={false}
       showHeader={false}
       showProgress={false}
@@ -55,7 +55,7 @@ export default function WelcomeRoute() {
             Protein Sparing Modified Fast
           </Text>
           <Text className="max-w-[320px] text-center text-base leading-7 text-muted">
-            Brz, disciplinovan pristup skidanju masnoce uz fokus na ocuvanje misica.
+            Brz, disciplinovan pristup skidanju masnoće uz fokus na očuvanje mišića.
           </Text>
         </View>
       </View>
@@ -73,8 +73,8 @@ export default function WelcomeRoute() {
       </View>
 
       <InfoCallout
-        description="Ovo je strog protokol. Ako imas hronicne tegobe ili koristis terapiju, posavetuj se sa lekarom pre pocetka."
-        title="Vazno"
+        description="Ovo je strog protokol. Ako imaš hronične tegobe ili koristiš terapiju, posavetuj se sa lekarom pre početka."
+        title="Važno"
         tone="warning"
       />
     </OnboardingStepScreen>

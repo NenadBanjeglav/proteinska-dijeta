@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 
 import { Card } from "@/src/components/ui/card";
+import { triggerHaptic } from "@/src/lib/haptics";
 import type { LoggedMeal } from "@/src/types/app";
 
 type MealCardProps = {
@@ -14,10 +15,10 @@ function buildMealSummary(meal: LoggedMeal) {
   const preview = labels.slice(0, 2).join(", ");
 
   if (labels.length <= 2) {
-    return preview || "Sacuvan obrok";
+    return preview || "Sačuvan obrok";
   }
 
-  return `${preview} + jos ${labels.length - 2}`;
+  return `${preview} + još ${labels.length - 2}`;
 }
 
 export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
@@ -42,7 +43,7 @@ export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
             className="text-3xl font-black text-text"
             style={{ fontVariant: ["tabular-nums"] }}
           >
-            {meal.proteinG}g
+            {meal.proteinG} g
           </Text>
           <Text className="text-sm text-muted">{meal.calories} kcal</Text>
         </View>
@@ -50,16 +51,24 @@ export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
 
       <View className="flex-row justify-end gap-2">
         <Pressable
-          className="rounded-2xl bg-surface-soft px-4 py-3"
-          onPress={() => onEdit(meal)}
+          accessibilityRole="button"
+          className="min-h-[48px] rounded-2xl bg-surface-soft px-4 py-3"
+          onPress={() => {
+            triggerHaptic("selection");
+            onEdit(meal);
+          }}
         >
           <Text className="text-sm font-semibold text-muted-strong">Izmeni</Text>
         </Pressable>
         <Pressable
-          className="rounded-2xl bg-danger/15 px-4 py-3"
-          onPress={() => onDelete(meal)}
+          accessibilityRole="button"
+          className="min-h-[48px] rounded-2xl bg-danger/15 px-4 py-3"
+          onPress={() => {
+            triggerHaptic("selection");
+            onDelete(meal);
+          }}
         >
-          <Text className="text-sm font-semibold text-danger">Obrisi</Text>
+          <Text className="text-sm font-semibold text-danger">Obriši</Text>
         </Pressable>
       </View>
     </Card>

@@ -71,7 +71,7 @@ export function GoalProjectionCard({
             </Text>
             <Text className="text-sm font-semibold text-warning">
               {projection.projectedDays === 0
-                ? "Cilj je vec dostignut"
+                ? "Cilj je već dostignut"
                 : projection.projectedTargetDate
                 ? `Do ${roundTo(projection.goalWeightKg, 1)} kg oko ${formatProjectionDate(
                     projection.projectedTargetDate,
