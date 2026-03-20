@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 
 import { Card } from "@/src/components/ui/card";
@@ -49,25 +50,27 @@ export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         </View>
       </View>
 
-      <View className="flex-row justify-end gap-2">
+      <View className="flex-row justify-end gap-2 border-t border-border/80 pt-3">
         <Pressable
           accessibilityRole="button"
-          className="min-h-[48px] rounded-2xl bg-surface-soft px-4 py-3"
+          className="min-h-[44px] min-w-[112px] flex-row items-center justify-center gap-2 rounded-full border border-border bg-surface-soft px-4 py-3"
           onPress={() => {
             triggerHaptic("selection");
             onEdit(meal);
           }}
         >
+          <Ionicons color="#CBD5E1" name="pencil-outline" size={16} />
           <Text className="text-sm font-semibold text-muted-strong">Izmeni</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          className="min-h-[48px] rounded-2xl bg-danger/15 px-4 py-3"
+          className="min-h-[44px] min-w-[112px] flex-row items-center justify-center gap-2 rounded-full border border-danger/35 bg-danger/10 px-4 py-3"
           onPress={() => {
             triggerHaptic("selection");
             onDelete(meal);
           }}
         >
+          <Ionicons color="#F04438" name="trash-outline" size={16} />
           <Text className="text-sm font-semibold text-danger">Obriši</Text>
         </Pressable>
       </View>

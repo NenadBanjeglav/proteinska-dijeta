@@ -41,7 +41,12 @@ export function ProgressMetricCard({
   tone,
 }: ProgressMetricCardProps) {
   return (
-    <Card className={cn("flex-1 items-center gap-4 px-4 py-4", CARD_STYLES[tone])}>
+    <Card
+      className={cn(
+        "min-h-[228px] w-full items-center justify-between gap-4 px-4 py-4",
+        CARD_STYLES[tone],
+      )}
+    >
       <View className="w-full flex-row items-center justify-between">
         <Text className={cn("text-xs font-semibold uppercase tracking-[1.8px]", TITLE_STYLES[tone])}>
           {title}
