@@ -94,6 +94,10 @@ export function MealFoodPicker({
   const favoriteIdSet = useMemo(() => new Set(favoriteFoodIds), [favoriteFoodIds]);
   const recentIdSet = useMemo(() => new Set(recentFoodIds), [recentFoodIds]);
   const selectedIdSet = useMemo(() => new Set(selectedFoodIds), [selectedFoodIds]);
+  const foodById = useMemo(
+    () => new Map(foods.map((food) => [food.id, food])),
+    [foods],
+  );
   const foodOrder = useMemo(
     () => new Map(foods.map((food, index) => [food.id, index])),
     [foods],
@@ -132,17 +136,17 @@ export function MealFoodPicker({
   const favoriteFoods = useMemo(
     () =>
       favoriteFoodIds
-        .map((id) => foods.find((food) => food.id === id) ?? null)
+        .map((id) => foodById.get(id) ?? null)
         .filter((food): food is FoodItem => food !== null),
-    [favoriteFoodIds, foods],
+    [favoriteFoodIds, foodById],
   );
   const recentFoods = useMemo(
     () =>
       recentFoodIds
         .filter((id) => !favoriteIdSet.has(id))
-        .map((id) => foods.find((food) => food.id === id) ?? null)
+        .map((id) => foodById.get(id) ?? null)
         .filter((food): food is FoodItem => food !== null),
-    [favoriteIdSet, foods, recentFoodIds],
+    [favoriteIdSet, foodById, recentFoodIds],
   );
   const hasQuery = query.trim().length > 0;
 
@@ -196,7 +200,7 @@ export function MealFoodPicker({
               food={food}
               onPress={() => onSelect(food.id)}
               onToggleFavorite={() => onToggleFavorite(food.id)}
-              selected={selectedFoodIds.includes(food.id)}
+              selected={selectedIdSet.has(food.id)}
             />
           ))}
         </View>

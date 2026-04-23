@@ -1,14 +1,9 @@
 import { getElapsedDays, getTodayDate, sortWeightHistory } from "@/src/lib/date";
+import { buildProtocolSnapshot } from "@/src/lib/protocol-context";
 import {
   buildGoalProjection,
   type GoalProjection,
 } from "@/src/lib/projection";
-import {
-  calcBodyFatPctFromLeanMass,
-  calcEstimatedCalories,
-  calcLeanBodyMassKg,
-  calcProteinTarget,
-} from "@/src/lib/psmf";
 import type { Activity, Gender, PSMFStore } from "@/src/types/app";
 
 export type EditablePlanInputs = {
@@ -41,17 +36,17 @@ export function buildPlanSummary(
   inputs: EditablePlanInputs,
   today = getTodayDate(),
 ): PlanSummary {
-  const currentWeightKg = inputs.currentWeightKg ?? inputs.startingWeightKg;
+  const snapshot = buildProtocolSnapshot({
+    startingWeightKg: inputs.startingWeightKg,
+    currentWeightKg: inputs.currentWeightKg ?? inputs.startingWeightKg,
+    gender: inputs.gender,
+    bodyFatPct: inputs.bodyFatPct,
+    activity: inputs.activity,
+  });
 
-  if (
-    inputs.startingWeightKg === null ||
-    currentWeightKg === null ||
-    inputs.gender === null ||
-    inputs.bodyFatPct === null ||
-    inputs.activity === null
-  ) {
+  if (!snapshot) {
     return {
-      currentWeightKg,
+      currentWeightKg: inputs.currentWeightKg ?? inputs.startingWeightKg,
       estimatedBodyFatPct: null,
       proteinTargetG: null,
       calorieTarget: null,
@@ -60,42 +55,16 @@ export function buildPlanSummary(
     };
   }
 
-  const leanBodyMassKg = calcLeanBodyMassKg(
-    inputs.startingWeightKg,
-    inputs.bodyFatPct,
-  );
-  const estimatedBodyFatPct = calcBodyFatPctFromLeanMass(
-    currentWeightKg,
-    leanBodyMassKg,
-  );
-
-  if (estimatedBodyFatPct === null) {
-    return {
-      currentWeightKg,
-      estimatedBodyFatPct: null,
-      proteinTargetG: null,
-      calorieTarget: null,
-      projection: null,
-      goalTotalDays: null,
-    };
-  }
-
-  const proteinTargetG = calcProteinTarget(
-    currentWeightKg,
-    estimatedBodyFatPct,
-    inputs.gender,
-    inputs.activity,
-  );
   const projection =
     inputs.goalWeightKg === null
       ? null
       : buildGoalProjection({
           startDate: today,
-          currentWeightKg,
+          currentWeightKg: snapshot.currentWeightKg,
           goalWeightKg: inputs.goalWeightKg,
-          leanBodyMassKg,
-          gender: inputs.gender,
-          activity: inputs.activity,
+          leanBodyMassKg: snapshot.leanBodyMassKg,
+          gender: inputs.gender!,
+          activity: inputs.activity!,
         });
 
   const elapsedBeforeToday =
@@ -106,10 +75,10 @@ export function buildPlanSummary(
       : elapsedBeforeToday + projection.projectedDays;
 
   return {
-    currentWeightKg,
-    estimatedBodyFatPct,
-    proteinTargetG,
-    calorieTarget: calcEstimatedCalories(proteinTargetG),
+    currentWeightKg: snapshot.currentWeightKg,
+    estimatedBodyFatPct: snapshot.estimatedBodyFatPct,
+    proteinTargetG: snapshot.proteinTargetG,
+    calorieTarget: snapshot.calorieTarget,
     projection,
     goalTotalDays,
   };

@@ -115,6 +115,22 @@ export function buildMealItems(selections: MealSelection[]) {
     .filter((item): item is LoggedMealItem => item !== null);
 }
 
+export function buildMealSelectionItems(selections: MealSelection[]) {
+  return selections
+    .map((selection) => {
+      const food = findFoodItem(selection.foodId);
+      if (!food) {
+        return null;
+      }
+
+      return {
+        ...selection,
+        label: food.label,
+      };
+    })
+    .filter((item): item is MealSelection & { label: string } => item !== null);
+}
+
 export function sumLoggedMealItems(items: LoggedMealItem[]) {
   return items.reduce(
     (totals, item) => ({

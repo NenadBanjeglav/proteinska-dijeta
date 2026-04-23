@@ -1,8 +1,5 @@
+import { buildProtocolSnapshot } from "@/src/lib/protocol-context";
 import {
-  calcBodyFatPctFromLeanMass,
-  calcEstimatedCalories,
-  calcLeanBodyMassKg,
-  calcProteinTarget,
   calcWeightAtBodyFatPct,
   getCategory,
   getCategoryLabel,
@@ -41,37 +38,28 @@ export type ProteinTargetChangeBanner = {
 };
 
 function deriveProtocolContext(store: PSMFStore, weightKg: number): ProtocolContext | null {
-  if (
-    store.startingWeightKg === null ||
-    store.bodyFatPct === null ||
-    !store.gender ||
-    !store.activity
-  ) {
+  const snapshot = buildProtocolSnapshot({
+    startingWeightKg: store.startingWeightKg,
+    currentWeightKg: weightKg,
+    gender: store.gender,
+    bodyFatPct: store.bodyFatPct,
+    activity: store.activity,
+  });
+
+  if (!snapshot) {
     return null;
   }
 
-  const leanBodyMassKg = calcLeanBodyMassKg(store.startingWeightKg, store.bodyFatPct);
-  const estimatedBodyFatPct = calcBodyFatPctFromLeanMass(weightKg, leanBodyMassKg);
-  if (estimatedBodyFatPct === null) {
-    return null;
-  }
-
-  const category = getCategory(store.gender, estimatedBodyFatPct);
-  const proteinTargetG = calcProteinTarget(
-    weightKg,
-    estimatedBodyFatPct,
-    store.gender,
-    store.activity,
-  );
+  const category = getCategory(store.gender!, snapshot.estimatedBodyFatPct);
 
   return {
-    weightKg,
-    leanBodyMassKg,
-    estimatedBodyFatPct,
+    weightKg: snapshot.currentWeightKg,
+    leanBodyMassKg: snapshot.leanBodyMassKg,
+    estimatedBodyFatPct: snapshot.estimatedBodyFatPct,
     category,
     categoryLabel: getCategoryLabel(category),
-    proteinTargetG,
-    calorieTarget: calcEstimatedCalories(proteinTargetG),
+    proteinTargetG: snapshot.proteinTargetG,
+    calorieTarget: snapshot.calorieTarget,
   };
 }
 

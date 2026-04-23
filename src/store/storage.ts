@@ -221,10 +221,29 @@ async function writeStore(store: PSMFStore) {
   return store;
 }
 
+// AsyncStorage writes can overlap from different UI actions; serialize mutations
+// so every write sees the latest persisted state instead of clobbering it.
+let pendingStoreMutation = Promise.resolve();
+
+function queueStoreMutation<T>(mutation: () => Promise<T>) {
+  const nextMutation = pendingStoreMutation
+    .catch(() => undefined)
+    .then(mutation);
+
+  pendingStoreMutation = nextMutation.then(
+    () => undefined,
+    () => undefined,
+  );
+
+  return nextMutation;
+}
+
 async function updateStore(recipe: (store: PSMFStore) => PSMFStore) {
-  const current = await getStore();
-  const next = recipe(current);
-  return writeStore(next);
+  return queueStoreMutation(async () => {
+    const current = await getStore();
+    const next = recipe(current);
+    return writeStore(next);
+  });
 }
 
 export async function getStore() {
@@ -346,6 +365,8 @@ export async function setWaterGlasses(date: string, count: number) {
 }
 
 export async function clearStore() {
-  await AsyncStorage.removeItem(STORAGE_KEY);
-  return cloneDefaultStore();
+  return queueStoreMutation(async () => {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+    return cloneDefaultStore();
+  });
 }
