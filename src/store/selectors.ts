@@ -256,12 +256,28 @@ export function sumMealCalories(meals: LoggedMeal[]) {
   return meals.reduce((total, meal) => total + meal.calories, 0);
 }
 
+export function sumMealCarbs(meals: LoggedMeal[]) {
+  return meals.reduce((total, meal) => total + (meal.carbsG ?? 0), 0);
+}
+
+export function sumMealFat(meals: LoggedMeal[]) {
+  return meals.reduce((total, meal) => total + (meal.fatG ?? 0), 0);
+}
+
 export function selectProteinConsumed(store: PSMFStore, date = getTodayDate()) {
   return sumMealProtein(selectMealsByDate(store, date));
 }
 
 export function selectCaloriesConsumed(store: PSMFStore, date = getTodayDate()) {
   return sumMealCalories(selectMealsByDate(store, date));
+}
+
+export function selectCarbsConsumed(store: PSMFStore, date = getTodayDate()) {
+  return sumMealCarbs(selectMealsByDate(store, date));
+}
+
+export function selectFatConsumed(store: PSMFStore, date = getTodayDate()) {
+  return sumMealFat(selectMealsByDate(store, date));
 }
 
 export function selectWaterGlasses(store: PSMFStore, date = getTodayDate()) {

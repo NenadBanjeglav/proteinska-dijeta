@@ -7,17 +7,18 @@ import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-ste
 import { Card } from "@/src/components/ui/card";
 import { Chip } from "@/src/components/ui/chip";
 import { SUPPLEMENT_CHECKLIST } from "@/src/constants/protocol";
-import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
+import {
+  useOnboardingWizard,
+  useSyncOnboardingStep,
+} from "@/src/hooks/use-onboarding-wizard";
 import { calcWaterTargetGlasses } from "@/src/lib/psmf";
 
 export default function SummaryRoute() {
-  const { state, syncStep, preview, confirm, goBack, isSubmitting } =
+  const { state, preview, confirm, goBack, isSubmitting } =
     useOnboardingWizard();
   const [draftName, setDraftName] = useState(state.userName);
 
-  useEffect(() => {
-    syncStep(5);
-  }, [syncStep]);
+  useSyncOnboardingStep(5);
 
   useEffect(() => {
     setDraftName(state.userName);

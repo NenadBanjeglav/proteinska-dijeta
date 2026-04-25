@@ -22,7 +22,7 @@ import type {
   MealSupplements,
 } from "@/src/types/app";
 
-type SelectableMealSectionKey = "protein" | "vegetable" | "condiment";
+type SelectableMealSectionKey = "protein" | "vegetable" | "fruit" | "condiment";
 
 export type MealSectionKey = SelectableMealSectionKey | "supplements";
 
@@ -53,6 +53,7 @@ type UseMealBuilderParams = {
 export const DEFAULT_MEAL_GRAMS: Record<SelectableMealSectionKey, number> = {
   protein: 150,
   vegetable: 150,
+  fruit: 100,
   condiment: 20,
 };
 
@@ -60,6 +61,7 @@ function createEmptySelections(): MealSelections {
   return {
     protein: [],
     vegetable: [],
+    fruit: [],
     condiment: [],
   };
 }
@@ -90,6 +92,7 @@ export function useMealBuilder({
     setSelections({
       protein: getSelectionsFromMeal(meal, "protein"),
       vegetable: getSelectionsFromMeal(meal, "vegetable"),
+      fruit: getSelectionsFromMeal(meal, "fruit"),
       condiment: getSelectionsFromMeal(meal, "condiment"),
     });
     setSupplements(getMealSupplements(meal));
@@ -100,7 +103,11 @@ export function useMealBuilder({
   }, [meal, open]);
 
   const previewMeal = useMemo(() => {
-    if (!selections.protein.length) {
+    const hasAnySelection = Object.values(selections).some(
+      (sectionSelections) => sectionSelections.length > 0,
+    );
+
+    if (!hasAnySelection) {
       return null;
     }
 
@@ -109,6 +116,7 @@ export function useMealBuilder({
       mealsForDate,
       proteins: selections.protein,
       vegetables: selections.vegetable,
+      fruits: selections.fruit,
       condiments: selections.condiment,
       supplements,
       customName: draftName,
@@ -120,6 +128,7 @@ export function useMealBuilder({
     () => ({
       protein: buildMealSelectionItems(selections.protein),
       vegetable: buildMealSelectionItems(selections.vegetable),
+      fruit: buildMealSelectionItems(selections.fruit),
       condiment: buildMealSelectionItems(selections.condiment),
     }),
     [selections],
@@ -129,6 +138,7 @@ export function useMealBuilder({
     () => ({
       protein: selectionItems.protein.length,
       vegetable: selectionItems.vegetable.length,
+      fruit: selectionItems.fruit.length,
       condiment: selectionItems.condiment.length,
       supplements: Object.values(supplements).filter(Boolean).length,
     }),
@@ -144,6 +154,7 @@ export function useMealBuilder({
     () => ({
       protein: getRecentFoodIdsByKind(allMeals, "protein"),
       vegetable: getRecentFoodIdsByKind(allMeals, "vegetable"),
+      fruit: getRecentFoodIdsByKind(allMeals, "fruit"),
       condiment: getRecentFoodIdsByKind(allMeals, "condiment"),
     }),
     [allMeals],

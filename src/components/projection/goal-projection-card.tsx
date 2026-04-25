@@ -93,6 +93,11 @@ export function GoalProjectionCard({
                 Cilj bf% ~{projection.projectedGoalBodyFatPct}
               </Text>
             ) : null}
+            {projection.strictBlockLabel ? (
+              <Text className="text-xs text-muted">
+                Blok: {projection.strictBlockLabel}
+              </Text>
+            ) : null}
           </View>
         </View>
 

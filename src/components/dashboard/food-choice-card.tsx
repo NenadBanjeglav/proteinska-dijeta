@@ -72,7 +72,8 @@ export function FoodChoiceCard({
           </View>
           <View className="flex-row items-center justify-between gap-3">
             <Text className="text-sm text-muted">
-              {food.proteinPer100g} g proteina / {food.caloriesPer100g} kcal na 100 g
+              P {food.proteinPer100g} g / UH {food.carbsPer100g} g / M{" "}
+              {food.fatPer100g} g / {food.caloriesPer100g} kcal
             </Text>
             <Text className="text-xs uppercase tracking-[1.2px] text-muted">
               {getBasisLabel(food.basis)}

@@ -29,8 +29,10 @@ import { calcWaterTargetLiters } from "@/src/lib/psmf";
 import { usePsmfStore } from "@/src/store/psmf-store";
 import {
   selectCaloriesConsumed,
+  selectCarbsConsumed,
   selectCurrentProtocolContext,
   selectCurrentWeightKg,
+  selectFatConsumed,
   selectEstimatedCalorieTarget,
   selectGoalProgress,
   selectGoalProjection,
@@ -91,6 +93,8 @@ export default function HomeRoute() {
   const calorieTarget = selectEstimatedCalorieTarget(data) ?? 0;
   const proteinConsumed = selectProteinConsumed(data, today);
   const caloriesConsumed = selectCaloriesConsumed(data, today);
+  const carbsConsumed = selectCarbsConsumed(data, today);
+  const fatConsumed = selectFatConsumed(data, today);
   const meals = selectMealsByDate(data, today);
   const protocol = selectProtocolProgress(data, today);
   const goalProjection = selectGoalProjection(data, today);
@@ -270,6 +274,7 @@ export default function HomeRoute() {
         </View>
 
         <ProgressMetricCard
+          captionLabel={`P ${proteinConsumed} g / UH ${carbsConsumed} g / M ${fatConsumed} g`}
           percentLabel={`${Math.round(calorieProgress * 100)}%`}
           progress={calorieProgress}
           targetLabel={`od ${calorieTarget} kcal`}

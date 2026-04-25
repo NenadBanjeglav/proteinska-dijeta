@@ -6,7 +6,10 @@ import { NumericInputCard } from "@/src/components/onboarding/numeric-input-card
 import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { Card } from "@/src/components/ui/card";
 import { Toggle } from "@/src/components/ui/toggle";
-import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
+import {
+  useOnboardingWizard,
+  useSyncOnboardingStep,
+} from "@/src/hooks/use-onboarding-wizard";
 import {
   convertWeightToKg,
   formatWeightForUnit,
@@ -18,7 +21,7 @@ import { roundTo } from "@/src/lib/units";
 import type { Gender, WeightUnit } from "@/src/types/app";
 
 export default function BasicsRoute() {
-  const { state, syncStep, commitStep, goBack } = useOnboardingWizard();
+  const { state, commitStep, goBack } = useOnboardingWizard();
   const [draftGender, setDraftGender] = useState<Gender>(state.gender);
   const [draftUnit, setDraftUnit] = useState<WeightUnit>(state.weightUnit);
   const [draftWeight, setDraftWeight] = useState(
@@ -28,9 +31,7 @@ export default function BasicsRoute() {
     formatWeightForUnit(state.goalWeightKg, state.weightUnit),
   );
 
-  useEffect(() => {
-    syncStep(2);
-  }, [syncStep]);
+  useSyncOnboardingStep(2);
 
   useEffect(() => {
     setDraftGender(state.gender);

@@ -1,7 +1,7 @@
 export type Gender = "male" | "female";
 export type Activity = "inactive" | "aerobics" | "weights";
 export type ProtocolCategory = 1 | 2 | 3;
-export type LoggedMealItemKind = "protein" | "vegetable" | "condiment";
+export type LoggedMealItemKind = "protein" | "vegetable" | "fruit" | "condiment";
 export type WeightUnit = "kg" | "lbs";
 export type BodyFatInputMode = "manual" | "bmi";
 export type HydrationStatus = "idle" | "hydrating" | "ready";
@@ -27,6 +27,8 @@ export type LoggedMealItem = {
   label: string;
   grams: number;
   proteinG: number;
+  carbsG: number;
+  fatG: number;
   calories: number;
 };
 
@@ -37,6 +39,8 @@ export type LoggedMeal = {
   items: LoggedMealItem[];
   supplements: MealSupplements;
   proteinG: number;
+  carbsG: number;
+  fatG: number;
   calories: number;
   date: string;
 };
@@ -93,7 +97,7 @@ export type PlanSettingsUpdate = {
   goalTotalDays: number | null;
 };
 
-export type FoodKind = "protein" | "vegetable" | "condiment";
+export type FoodKind = "protein" | "vegetable" | "fruit" | "condiment";
 export type FoodPriority = "tierA" | "tierB" | "limited" | "condiment";
 export type FoodBasis = "raw" | "drained" | "asPackaged";
 
@@ -104,6 +108,8 @@ export type FoodItem = {
   priority: FoodPriority;
   basis: FoodBasis;
   proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
   caloriesPer100g: number;
 };
 

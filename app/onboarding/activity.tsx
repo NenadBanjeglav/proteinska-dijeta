@@ -6,7 +6,10 @@ import { InfoCallout } from "@/src/components/onboarding/info-callout";
 import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { SelectionCard } from "@/src/components/onboarding/selection-card";
 import { Card } from "@/src/components/ui/card";
-import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
+import {
+  useOnboardingWizard,
+  useSyncOnboardingStep,
+} from "@/src/hooks/use-onboarding-wizard";
 import {
   buildOnboardingPreview,
   formatProteinMultiplierLabel,
@@ -16,12 +19,10 @@ import {
 import type { Activity } from "@/src/types/app";
 
 export default function ActivityRoute() {
-  const { state, syncStep, commitStep, goBack } = useOnboardingWizard();
+  const { state, commitStep, goBack } = useOnboardingWizard();
   const [draftActivity, setDraftActivity] = useState<Activity | null>(state.activity);
 
-  useEffect(() => {
-    syncStep(4);
-  }, [syncStep]);
+  useSyncOnboardingStep(4);
 
   useEffect(() => {
     setDraftActivity(state.activity);

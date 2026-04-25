@@ -1,11 +1,13 @@
-import { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { InfoCallout } from "@/src/components/onboarding/info-callout";
 import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
-import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
+import {
+  useOnboardingWizard,
+  useSyncOnboardingStep,
+} from "@/src/hooks/use-onboarding-wizard";
 
 const BENEFITS = [
   "Dobijaš dnevni cilj proteina prilagođen telu, aktivnosti i cilju.",
@@ -14,11 +16,8 @@ const BENEFITS = [
 ];
 
 export default function WelcomeRoute() {
-  const { goNext, syncStep } = useOnboardingWizard();
-
-  useEffect(() => {
-    syncStep(1);
-  }, [syncStep]);
+  const { goNext } = useOnboardingWizard();
+  useSyncOnboardingStep(1);
 
   return (
     <OnboardingStepScreen

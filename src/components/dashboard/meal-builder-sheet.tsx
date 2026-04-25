@@ -29,6 +29,7 @@ type MealBuilderSheetProps = {
 
 const PROTEIN_FOODS = getFoodsByKind("protein");
 const VEGETABLE_FOODS = getFoodsByKind("vegetable");
+const FRUIT_FOODS = getFoodsByKind("fruit");
 const CONDIMENT_FOODS = getFoodsByKind("condiment");
 
 export function MealBuilderSheet({
@@ -138,6 +139,33 @@ export function MealBuilderSheet({
       );
     }
 
+    if (activeSection === "fruit") {
+      return (
+        <MealBuilderFoodSection
+          defaultGrams={DEFAULT_MEAL_GRAMS.fruit}
+          description={activeSectionConfig.description}
+          favoriteFoodIds={favoriteFoodIds}
+          foods={FRUIT_FOODS}
+          onAdjustAmount={(foodId, delta) =>
+            adjustSelectionAmount("fruit", foodId, delta)
+          }
+          onEditAmount={(foodId) => openAmountSheet("fruit", foodId)}
+          onOptionalChoicePress={() => clearSelections("fruit")}
+          onRemove={(foodId) => handleRemoveSelection("fruit", foodId)}
+          onSelect={(foodId) => handleSelectFood("fruit", foodId)}
+          onToggleFavorite={handleToggleFavorite}
+          optionalChoiceLabel="Bez voca u ovom obroku"
+          optionalChoiceSelected={selections.fruit.length === 0}
+          recentFoodIds={recentFoodIdsByKind.fruit}
+          selectedFoodIds={selections.fruit.map((selection) => selection.foodId)}
+          selectedTitle="Izabrano voce"
+          selectionItems={selectionItems.fruit}
+          stepSize={25}
+          title={activeSectionConfig.title}
+        />
+      );
+    }
+
     if (activeSection === "supplements") {
       return (
         <MealBuilderSupplementsSection
@@ -200,6 +228,7 @@ export function MealBuilderSheet({
                   {previewMeal?.proteinG ?? 0} g
                 </Text>
                 <Text className="text-sm text-muted">
+                  UH {previewMeal?.carbsG ?? 0} g / M {previewMeal?.fatG ?? 0} g /{" "}
                   {previewMeal?.calories ?? 0} kcal
                 </Text>
               </View>

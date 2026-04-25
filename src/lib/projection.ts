@@ -4,9 +4,12 @@ import {
   calcEstimatedCalories,
   calcLeanBodyMassKg,
   calcProteinTarget,
+  getCategory,
+  getStrictPsmfBlockLabel,
+  getStrictPsmfBlockRange,
 } from "@/src/lib/psmf";
 import { roundTo } from "@/src/lib/units";
-import type { Activity, Gender } from "@/src/types/app";
+import type { Activity, Gender, ProtocolCategory } from "@/src/types/app";
 
 const ACTIVITY_TDEE_MULTIPLIERS: Record<Activity, number> = {
   inactive: 1.2,
@@ -33,6 +36,10 @@ export type GoalProjection = {
   projectedDays: number | null;
   projectedTargetDate: string | null;
   projectedGoalBodyFatPct: number | null;
+  protocolCategory: ProtocolCategory | null;
+  strictBlockLabel: string | null;
+  maxStrictPsmfDays: number | null;
+  requiresDietBreakBeforeGoal: boolean;
   chartPoints: GoalProjectionPoint[];
 };
 
@@ -59,6 +66,10 @@ function buildInvalidProjection(
     projectedDays: null,
     projectedTargetDate: null,
     projectedGoalBodyFatPct,
+    protocolCategory: null,
+    strictBlockLabel: null,
+    maxStrictPsmfDays: null,
+    requiresDietBreakBeforeGoal: false,
     chartPoints: [],
   };
 }
@@ -84,21 +95,24 @@ function getCautionMessage(params: {
   projectedDays: number;
   projectedGoalBodyFatPct: number | null;
   gender: Gender;
+  requiresDietBreakBeforeGoal: boolean;
+  protocolCategory: ProtocolCategory;
+  strictBlockLabel: string;
 }) {
   const leanThreshold = getLeanGoalThreshold(params.gender);
+
+  if (params.requiresDietBreakBeforeGoal) {
+    return `Procena prelazi jedan neprekidni PSMF blok za kategoriju ${params.protocolCategory} (${params.strictBlockLabel}). Racunaj obaveznu pauzu/refeed pre nastavka; datum na grafikonu je samo matematicka procena strict dana.`;
+  }
 
   if (
     params.projectedGoalBodyFatPct !== null &&
     params.projectedGoalBodyFatPct < leanThreshold
   ) {
-    return "Cilj te vodi vrlo nisko sa procentom masti. Procena ne računa pauze, refeede ni adaptaciju.";
+    return "Cilj te vodi vrlo nisko sa procentom masti. Procena ne racuna pauze, refeede ni adaptaciju.";
   }
 
-  if (params.projectedDays > 42) {
-    return "Procena pretpostavlja strogi PSMF bez pauza. Za ovako dug period rezultat je verovatno realniji kroz etape.";
-  }
-
-  return "Procena pretpostavlja strogi PSMF bez planiranih pauza.";
+  return `Procena je energetski model za strict dane. Za kategoriju ${params.protocolCategory} knjiga okvirno dozvoljava ${params.strictBlockLabel} pre pauze/refeeda.`;
 }
 
 export function calcBmrKatchMcArdle(leanBodyMassKg: number) {
@@ -135,6 +149,17 @@ export function buildGoalProjection({
       projectedDays: 0,
       projectedTargetDate: startDate,
       projectedGoalBodyFatPct: currentBodyFatPct,
+      protocolCategory:
+        currentBodyFatPct === null ? null : getCategory(gender, currentBodyFatPct),
+      strictBlockLabel:
+        currentBodyFatPct === null
+          ? null
+          : getStrictPsmfBlockLabel(getCategory(gender, currentBodyFatPct)),
+      maxStrictPsmfDays:
+        currentBodyFatPct === null
+          ? null
+          : getStrictPsmfBlockRange(getCategory(gender, currentBodyFatPct)).maxDays,
+      requiresDietBreakBeforeGoal: false,
       chartPoints: [],
     };
   }
@@ -145,6 +170,22 @@ export function buildGoalProjection({
       getInvalidMessage("lean-mass"),
     );
   }
+
+  const currentBodyFatPct = calcBodyFatPctFromLeanMass(
+    roundedCurrentWeightKg,
+    leanBodyMassKg,
+  );
+
+  if (currentBodyFatPct === null) {
+    return buildInvalidProjection(
+      { currentWeightKg: roundedCurrentWeightKg, goalWeightKg: roundedGoalWeightKg },
+      getInvalidMessage("lean-mass"),
+    );
+  }
+
+  const protocolCategory = getCategory(gender, currentBodyFatPct);
+  const strictBlockRange = getStrictPsmfBlockRange(protocolCategory);
+  const strictBlockLabel = getStrictPsmfBlockLabel(protocolCategory);
 
   const projectedGoalBodyFatPct = calcBodyFatPctFromLeanMass(
     roundedGoalWeightKg,
@@ -236,8 +277,9 @@ export function buildGoalProjection({
     });
   }
 
+  const requiresDietBreakBeforeGoal = projectedDays > strictBlockRange.maxDays;
   const status: GoalProjectionStatus =
-    projectedDays > 42 || projectedGoalBodyFatPct < getLeanGoalThreshold(gender)
+    requiresDietBreakBeforeGoal || projectedGoalBodyFatPct < getLeanGoalThreshold(gender)
       ? "caution"
       : "ok";
 
@@ -247,6 +289,9 @@ export function buildGoalProjection({
       projectedDays,
       projectedGoalBodyFatPct,
       gender,
+      requiresDietBreakBeforeGoal,
+      protocolCategory,
+      strictBlockLabel,
     }),
     currentWeightKg: roundedCurrentWeightKg,
     goalWeightKg: roundedGoalWeightKg,
@@ -254,6 +299,10 @@ export function buildGoalProjection({
     projectedDays,
     projectedTargetDate: addDays(startDate, projectedDays),
     projectedGoalBodyFatPct,
+    protocolCategory,
+    strictBlockLabel,
+    maxStrictPsmfDays: strictBlockRange.maxDays,
+    requiresDietBreakBeforeGoal,
     chartPoints,
   };
 }

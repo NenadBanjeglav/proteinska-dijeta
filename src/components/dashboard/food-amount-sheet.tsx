@@ -31,6 +31,12 @@ const CONFIG = {
     quickAmounts: [100, 150, 250],
     step: 25,
   },
+  fruit: {
+    title: "Kolicina voca",
+    description: "Unesi grame direktno za ovo voce.",
+    quickAmounts: [50, 100, 150],
+    step: 25,
+  },
   condiment: {
     title: "Količina dodatka",
     description: "Unesi grame direktno za ovaj dozvoljeni dodatak.",

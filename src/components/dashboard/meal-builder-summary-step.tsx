@@ -40,7 +40,9 @@ export function MealBuilderSummaryStep({
             </View>
             <View className="items-end gap-1">
               <Text className="text-base font-bold text-text">{item.proteinG}g</Text>
-              <Text className="text-sm text-muted">{item.calories} kcal</Text>
+              <Text className="text-sm text-muted">
+                UH {item.carbsG}g / M {item.fatG}g / {item.calories} kcal
+              </Text>
             </View>
           </View>
         ))}
@@ -55,7 +57,10 @@ export function MealBuilderSummaryStep({
             <Text className="text-2xl font-black text-text">
               {previewMeal?.proteinG ?? 0}g
             </Text>
-            <Text className="text-sm text-muted">{previewMeal?.calories ?? 0} kcal</Text>
+            <Text className="text-sm text-muted">
+              UH {previewMeal?.carbsG ?? 0}g / M {previewMeal?.fatG ?? 0}g /{" "}
+              {previewMeal?.calories ?? 0} kcal
+            </Text>
           </View>
         </View>
       </Card>

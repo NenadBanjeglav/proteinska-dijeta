@@ -7,7 +7,10 @@ import { NumericInputCard } from "@/src/components/onboarding/numeric-input-card
 import { OnboardingStepScreen } from "@/src/components/onboarding/onboarding-step-screen";
 import { Card } from "@/src/components/ui/card";
 import { Toggle } from "@/src/components/ui/toggle";
-import { useOnboardingWizard } from "@/src/hooks/use-onboarding-wizard";
+import {
+  useOnboardingWizard,
+  useSyncOnboardingStep,
+} from "@/src/hooks/use-onboarding-wizard";
 import {
   formatNumberInput,
   getBmiEstimate,
@@ -17,7 +20,7 @@ import {
 import type { BodyFatInputMode } from "@/src/types/app";
 
 export default function BodyFatRoute() {
-  const { state, syncStep, commitStep, goBack } = useOnboardingWizard();
+  const { state, commitStep, goBack } = useOnboardingWizard();
   const [draftMode, setDraftMode] = useState<BodyFatInputMode>(state.bodyFatMode);
   const [draftBodyFat, setDraftBodyFat] = useState(
     formatNumberInput(state.bodyFatPct, 1),
@@ -26,9 +29,7 @@ export default function BodyFatRoute() {
     formatNumberInput(state.heightCm, 0),
   );
 
-  useEffect(() => {
-    syncStep(3);
-  }, [syncStep]);
+  useSyncOnboardingStep(3);
 
   useEffect(() => {
     setDraftMode(state.bodyFatMode);

@@ -47,6 +47,9 @@ export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
             {meal.proteinG} g
           </Text>
           <Text className="text-sm text-muted">{meal.calories} kcal</Text>
+          <Text className="text-xs text-muted">
+            UH {meal.carbsG ?? 0} g / M {meal.fatG ?? 0} g
+          </Text>
         </View>
       </View>
 

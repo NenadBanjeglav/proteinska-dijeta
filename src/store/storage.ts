@@ -22,7 +22,7 @@ export const STORAGE_KEY = "psmf_store";
 
 const GENDERS = new Set<Gender>(["male", "female"]);
 const ACTIVITIES = new Set<Activity>(["inactive", "aerobics", "weights"]);
-const MEAL_KINDS = new Set(["protein", "vegetable", "condiment"]);
+const MEAL_KINDS = new Set(["protein", "vegetable", "fruit", "condiment"]);
 
 export const DEFAULT_STORE: PSMFStore = {
   userName: null,
@@ -120,6 +120,8 @@ function parseMealItem(value: unknown): LoggedMealItem | null {
     label: value.label,
     grams: value.grams,
     proteinG: value.proteinG,
+    carbsG: isNumber(value.carbsG) ? value.carbsG : 0,
+    fatG: isNumber(value.fatG) ? value.fatG : 0,
     calories: value.calories,
   };
 }
@@ -152,6 +154,14 @@ function parseMeal(value: unknown): LoggedMeal | null {
     return null;
   }
 
+  const itemTotals = items.reduce(
+    (totals, item) => ({
+      carbsG: totals.carbsG + item.carbsG,
+      fatG: totals.fatG + item.fatG,
+    }),
+    { carbsG: 0, fatG: 0 },
+  );
+
   return {
     id: value.id,
     name: value.name,
@@ -159,6 +169,8 @@ function parseMeal(value: unknown): LoggedMeal | null {
     items,
     supplements: parseMealSupplements(value.supplements),
     proteinG: value.proteinG,
+    carbsG: isNumber(value.carbsG) ? value.carbsG : itemTotals.carbsG,
+    fatG: isNumber(value.fatG) ? value.fatG : itemTotals.fatG,
     calories: value.calories,
     date: value.date,
   };

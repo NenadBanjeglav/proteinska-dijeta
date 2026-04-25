@@ -90,6 +90,10 @@ export function calcMealValue(baseValue: number, grams: number) {
   return Math.round((baseValue * grams) / 100);
 }
 
+export function calcMealMacroValue(baseValue: number, grams: number) {
+  return Math.round((baseValue * grams * 10) / 100) / 10;
+}
+
 export function buildMealItem(food: FoodItem, grams: number): LoggedMealItem {
   return {
     id: createId("meal-item"),
@@ -97,7 +101,9 @@ export function buildMealItem(food: FoodItem, grams: number): LoggedMealItem {
     kind: food.kind,
     label: food.label,
     grams,
-    proteinG: calcMealValue(food.proteinPer100g, grams),
+    proteinG: calcMealMacroValue(food.proteinPer100g, grams),
+    carbsG: calcMealMacroValue(food.carbsPer100g, grams),
+    fatG: calcMealMacroValue(food.fatPer100g, grams),
     calories: calcMealValue(food.caloriesPer100g, grams),
   };
 }
@@ -135,9 +141,11 @@ export function sumLoggedMealItems(items: LoggedMealItem[]) {
   return items.reduce(
     (totals, item) => ({
       proteinG: totals.proteinG + item.proteinG,
+      carbsG: totals.carbsG + item.carbsG,
+      fatG: totals.fatG + item.fatG,
       calories: totals.calories + item.calories,
     }),
-    { proteinG: 0, calories: 0 },
+    { proteinG: 0, carbsG: 0, fatG: 0, calories: 0 },
   );
 }
 
@@ -171,6 +179,7 @@ export function buildLoggedMeal(params: {
   mealsForDate: LoggedMeal[];
   proteins: MealSelection[];
   vegetables: MealSelection[];
+  fruits: MealSelection[];
   condiments: MealSelection[];
   supplements: MealSupplements;
   customName?: string | null;
@@ -179,6 +188,7 @@ export function buildLoggedMeal(params: {
   const items = buildMealItems([
     ...params.proteins,
     ...params.vegetables,
+    ...params.fruits,
     ...params.condiments,
   ]);
   const totals = sumLoggedMealItems(items);
@@ -192,6 +202,8 @@ export function buildLoggedMeal(params: {
     items,
     supplements: { ...params.supplements },
     proteinG: totals.proteinG,
+    carbsG: totals.carbsG,
+    fatG: totals.fatG,
     calories: totals.calories,
   };
 }

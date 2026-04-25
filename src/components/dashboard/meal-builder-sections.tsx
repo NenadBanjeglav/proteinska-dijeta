@@ -75,6 +75,15 @@ export const MEAL_SECTION_OPTIONS: {
     icon: "leaf-outline",
   },
   {
+    key: "fruit",
+    label: "Voce",
+    title: "Voce i bobicasto",
+    description:
+      "Voce nije strogi PSMF izbor, ali ga ovde mozes precizno evidentirati kada ga pojedes.",
+    iconSet: "material",
+    icon: "fruit-cherries",
+  },
+  {
     key: "condiment",
     label: "Dodaci",
     title: "Dodaci",

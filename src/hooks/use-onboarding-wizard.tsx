@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 import {
   INITIAL_ONBOARDING_STATE,
@@ -49,6 +49,7 @@ export function OnboardingWizardProvider({ children }: PropsWithChildren) {
   }, [state]);
 
   const reset = useCallback(() => {
+    stateRef.current = INITIAL_ONBOARDING_STATE;
     setState(INITIAL_ONBOARDING_STATE);
   }, []);
 
@@ -61,20 +62,30 @@ export function OnboardingWizardProvider({ children }: PropsWithChildren) {
       return;
     }
 
-    setState((previous) =>
-      previous.step === step ? previous : { ...previous, step },
-    );
+    setState((previous) => {
+      if (previous.step === step) {
+        stateRef.current = previous;
+        return previous;
+      }
+
+      const next = { ...previous, step };
+      stateRef.current = next;
+      return next;
+    });
   }, []);
 
   const commitStep = useCallback(
     (patch: Partial<OnboardingWizardState> = {}) => {
-      const nextState = { ...state, ...patch };
-      if (!isStepValid(nextState, state.step)) {
+      const current = stateRef.current;
+      const nextState = { ...current, ...patch };
+      if (!isStepValid(nextState, current.step)) {
         return false;
       }
 
-      const nextStep = getNextStep(state.step);
-      setState({ ...nextState, step: nextStep ?? state.step });
+      const nextStep = getNextStep(current.step);
+      const committedState = { ...nextState, step: nextStep ?? current.step };
+      stateRef.current = committedState;
+      setState(committedState);
 
       if (nextStep) {
         router.push(getRouteForStep(nextStep));
@@ -82,21 +93,26 @@ export function OnboardingWizardProvider({ children }: PropsWithChildren) {
 
       return true;
     },
-    [state],
+    [],
   );
 
   const goNext = useCallback(() => commitStep(), [commitStep]);
 
   const goBack = useCallback(() => {
-    const previousStep = getPreviousStep(state.step);
+    const current = stateRef.current;
+    const previousStep = getPreviousStep(current.step);
     if (!previousStep) {
       return false;
     }
 
-    setState((current) => ({ ...current, step: previousStep }));
+    setState((previous) => {
+      const next = { ...previous, step: previousStep };
+      stateRef.current = next;
+      return next;
+    });
     router.replace(getRouteForStep(previousStep));
     return true;
-  }, [state.step]);
+  }, []);
 
   const confirm = useCallback(async (patch: Partial<OnboardingWizardState> = {}) => {
     const nextState = { ...stateRef.current, ...patch };
@@ -107,6 +123,7 @@ export function OnboardingWizardProvider({ children }: PropsWithChildren) {
 
     setIsSubmitting(true);
     try {
+      stateRef.current = nextState;
       setState(nextState);
       await saveOnboardingProfile(profile);
       reset();
@@ -146,4 +163,14 @@ export function useOnboardingWizard() {
     ...context,
     preview: buildOnboardingPreview(context.state),
   };
+}
+
+export function useSyncOnboardingStep(step: OnboardingStep) {
+  const { syncStep } = useOnboardingWizard();
+
+  useFocusEffect(
+    useCallback(() => {
+      syncStep(step);
+    }, [step, syncStep]),
+  );
 }

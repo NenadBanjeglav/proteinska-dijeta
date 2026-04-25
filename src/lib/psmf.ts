@@ -33,12 +33,14 @@ export function clamp(value: number, min: number, max: number) {
 export function getCategory(gender: Gender, bodyFatPct: number): ProtocolCategory {
   if (gender === "male") {
     if (bodyFatPct <= 15) return 1;
-    if (bodyFatPct <= 25) return 2;
+    // The handbook says to use the leaner/lower-numbered category on exact
+    // borders, so 26% male still maps to category 2.
+    if (bodyFatPct <= 26) return 2;
     return 3;
   }
 
   if (bodyFatPct <= 24) return 1;
-  if (bodyFatPct <= 34) return 2;
+  if (bodyFatPct <= 35) return 2;
   return 3;
 }
 
@@ -52,7 +54,7 @@ export function getNextCategoryThresholdBodyFatPct(
 ) {
   if (gender === "male") {
     if (category === 3) {
-      return 25;
+      return 26;
     }
 
     if (category === 2) {
@@ -63,7 +65,7 @@ export function getNextCategoryThresholdBodyFatPct(
   }
 
   if (category === 3) {
-    return 34;
+    return 35;
   }
 
   if (category === 2) {
@@ -71,6 +73,27 @@ export function getNextCategoryThresholdBodyFatPct(
   }
 
   return null;
+}
+
+export function getStrictPsmfBlockRange(category: ProtocolCategory) {
+  switch (category) {
+    case 1:
+      return { minDays: 11, maxDays: 12 };
+    case 2:
+      return { minDays: 14, maxDays: 42 };
+    case 3:
+      return { minDays: 42, maxDays: 84 };
+  }
+}
+
+export function getStrictPsmfBlockLabel(category: ProtocolCategory) {
+  const range = getStrictPsmfBlockRange(category);
+
+  if (category === 1) {
+    return `${range.minDays}-${range.maxDays} dana`;
+  }
+
+  return `${Math.round(range.minDays / 7)}-${Math.round(range.maxDays / 7)} nedelja`;
 }
 
 export function getProteinRange(category: ProtocolCategory, activity: Activity) {
