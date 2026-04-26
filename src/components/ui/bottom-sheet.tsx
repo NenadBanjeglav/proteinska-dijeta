@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -39,9 +40,18 @@ export function BottomSheet({
   const opacity = useRef(new Animated.Value(0)).current;
   const dragY = useRef(new Animated.Value(0)).current;
   const [visible, setVisible] = useState(open);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const maxContentHeight = Math.min(height * 0.82, 720);
+  const keyboardOffset = Platform.OS === "android" ? keyboardHeight : 0;
+  const availableHeight = Math.max(
+    320,
+    height - keyboardOffset - insets.top - 16,
+  );
+  const maxContentHeight = Math.min(
+    keyboardOffset > 0 ? availableHeight : height * 0.82,
+    720,
+  );
   const maxScrollHeight = footer
     ? Math.max(180, maxContentHeight - 148 - insets.bottom)
     : maxContentHeight;
@@ -83,6 +93,20 @@ export function BottomSheet({
       }),
     [closeThreshold, dragY, onOpenChange],
   );
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -139,18 +163,21 @@ export function BottomSheet({
       visible={visible}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
         keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
       >
-        <View className="flex-1 justify-end bg-transparent">
+        <View
+          className="flex-1 justify-end bg-transparent"
+          style={{ paddingBottom: keyboardOffset }}
+        >
           <Pressable className="flex-1 bg-black/60" onPress={() => onOpenChange(false)} />
           <Animated.View
             style={{ opacity, transform: [{ translateY: Animated.add(translateY, dragY) }] }}
           >
             <Card
               className="rounded-b-none border-b-0 px-6 pt-4"
-              style={{ maxHeight: height - 16 }}
+              style={{ maxHeight: availableHeight }}
             >
               <View className="mb-4 items-center gap-3" {...panResponder.panHandlers}>
                 <View className="h-1.5 w-14 rounded-full bg-border" />
@@ -161,7 +188,7 @@ export function BottomSheet({
               <ScrollView
                 automaticallyAdjustKeyboardInsets
                 bounces={false}
-                contentContainerStyle={{ paddingBottom: 12 }}
+                contentContainerStyle={{ paddingBottom: keyboardHeight ? 24 : 12 }}
                 contentInsetAdjustmentBehavior="never"
                 keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
                 keyboardShouldPersistTaps="handled"

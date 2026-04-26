@@ -5,6 +5,7 @@ import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/cn";
 import { triggerHaptic } from "@/src/lib/haptics";
 import { getBasisLabel } from "@/src/lib/meals";
+import { formatKcal, formatMacroGrams } from "@/src/lib/units";
 import type { FoodItem } from "@/src/types/app";
 
 type FoodChoiceCardProps = {
@@ -25,7 +26,9 @@ export function FoodChoiceCard({
   return (
     <Pressable
       accessibilityHint="Dodaj namirnicu ili izmeni količinu ako je već izabrana."
-      accessibilityLabel={`${food.label}, ${food.proteinPer100g} g proteina na 100 g`}
+      accessibilityLabel={`${food.label}, ${formatMacroGrams(
+        food.proteinPer100g,
+      )} g proteina na 100 g`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       className="rounded-3xl"
@@ -72,8 +75,10 @@ export function FoodChoiceCard({
           </View>
           <View className="flex-row items-center justify-between gap-3">
             <Text className="text-sm text-muted">
-              P {food.proteinPer100g} g / UH {food.carbsPer100g} g / M{" "}
-              {food.fatPer100g} g / {food.caloriesPer100g} kcal
+              P {formatMacroGrams(food.proteinPer100g)} g / UH{" "}
+              {formatMacroGrams(food.carbsPer100g)} g / M{" "}
+              {formatMacroGrams(food.fatPer100g)} g /{" "}
+              {formatKcal(food.caloriesPer100g)} kcal
             </Text>
             <Text className="text-xs uppercase tracking-[1.2px] text-muted">
               {getBasisLabel(food.basis)}

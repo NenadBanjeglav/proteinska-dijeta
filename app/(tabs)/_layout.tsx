@@ -50,6 +50,19 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="add-meal"
+        options={{
+          title: TAB_LABELS.addMeal,
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons
+              color={color}
+              name={focused ? "add-circle" : "add-circle-outline"}
+              size={size + 3}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="progress"
         options={{
           title: TAB_LABELS.progress,

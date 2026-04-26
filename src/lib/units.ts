@@ -14,3 +14,23 @@ export function roundTo(value: number, places = 1) {
   const factor = 10 ** places;
   return Math.round(value * factor) / factor;
 }
+
+function safeNumber(value: number | null | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+export function formatRoundedNumber(
+  value: number | null | undefined,
+  places = 1,
+) {
+  const rounded = roundTo(safeNumber(value), places);
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(places);
+}
+
+export function formatMacroGrams(value: number | null | undefined) {
+  return formatRoundedNumber(value, 1);
+}
+
+export function formatKcal(value: number | null | undefined) {
+  return String(Math.round(safeNumber(value)));
+}

@@ -7,6 +7,7 @@ import {
 } from "@/src/lib/psmf";
 import { getElapsedDays, getTodayDate, sortWeightHistory } from "@/src/lib/date";
 import { buildGoalProjection } from "@/src/lib/projection";
+import { roundTo } from "@/src/lib/units";
 import type { LoggedMeal, PSMFStore, ProtocolCategory } from "@/src/types/app";
 
 export type ProtocolContext = {
@@ -249,19 +250,19 @@ export function selectMealsByDate(store: PSMFStore, date = getTodayDate()) {
 }
 
 export function sumMealProtein(meals: LoggedMeal[]) {
-  return meals.reduce((total, meal) => total + meal.proteinG, 0);
+  return roundTo(meals.reduce((total, meal) => total + meal.proteinG, 0), 1);
 }
 
 export function sumMealCalories(meals: LoggedMeal[]) {
-  return meals.reduce((total, meal) => total + meal.calories, 0);
+  return Math.round(meals.reduce((total, meal) => total + meal.calories, 0));
 }
 
 export function sumMealCarbs(meals: LoggedMeal[]) {
-  return meals.reduce((total, meal) => total + (meal.carbsG ?? 0), 0);
+  return roundTo(meals.reduce((total, meal) => total + (meal.carbsG ?? 0), 0), 1);
 }
 
 export function sumMealFat(meals: LoggedMeal[]) {
-  return meals.reduce((total, meal) => total + (meal.fatG ?? 0), 0);
+  return roundTo(meals.reduce((total, meal) => total + (meal.fatG ?? 0), 0), 1);
 }
 
 export function selectProteinConsumed(store: PSMFStore, date = getTodayDate()) {

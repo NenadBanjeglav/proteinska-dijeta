@@ -8,11 +8,14 @@ import {
   saveOnboardingProfile as persistOnboardingProfile,
   updatePlanSettings as persistPlanSettings,
   saveWeightEntry as persistWeightEntry,
+  saveMealTemplate as persistMealTemplate,
   setWaterGlasses as persistWaterGlasses,
   setGoalWeightKg as persistGoalWeightKg,
   setDismissedProteinChangeKey as persistDismissedProteinChangeKey,
   toggleFavoriteFood as persistToggleFavoriteFood,
   deleteMeal as removeMeal,
+  deleteMealTemplate as removeMealTemplate,
+  renameMealTemplate as persistRenameMealTemplate,
 } from "@/src/store/storage";
 import type {
   LoggedMeal,
@@ -72,6 +75,21 @@ export const usePsmfStore = create<PSMFAppStore>((set, get) => ({
 
   deleteMeal: async (mealId: string) => {
     const data = await removeMeal(mealId);
+    set({ data });
+  },
+
+  saveMealTemplate: async (meal: LoggedMeal) => {
+    const data = await persistMealTemplate(meal);
+    set({ data });
+  },
+
+  deleteMealTemplate: async (templateId: string) => {
+    const data = await removeMealTemplate(templateId);
+    set({ data });
+  },
+
+  renameMealTemplate: async (templateId: string, name: string) => {
+    const data = await persistRenameMealTemplate(templateId, name);
     set({ data });
   },
 

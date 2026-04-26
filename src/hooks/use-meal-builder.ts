@@ -10,7 +10,6 @@ import {
   getAvailableMealSupplementDefinitions,
   getMealSupplements,
   getRecentFoodIdsByKind,
-  getSelectionsFromMeal,
   normalizeMealName,
   removeMealSelection,
   updateMealSelectionGrams,
@@ -18,6 +17,8 @@ import {
 } from "@/src/lib/meals";
 import type {
   LoggedMeal,
+  LoggedMealItem,
+  MealTemplate,
   MealSupplementKey,
   MealSupplements,
 } from "@/src/types/app";
@@ -39,13 +40,19 @@ export type MealSelectionItem = MealSelection & {
 type MealSelections = Record<SelectableMealSectionKey, MealSelection[]>;
 
 type MealSelectionItems = Record<SelectableMealSectionKey, MealSelectionItem[]>;
+type MealDraftSource = {
+  items: LoggedMealItem[];
+  customName: string | null;
+};
 
 type UseMealBuilderParams = {
   open: boolean;
   date: string;
   mealsForDate: LoggedMeal[];
   meal: LoggedMeal | null;
+  template: MealTemplate | null;
   allMeals: LoggedMeal[];
+  foodGramsById: Record<string, number>;
   onSave: (meal: LoggedMeal) => Promise<void>;
   onOpenChange: (open: boolean) => void;
 };
@@ -66,12 +73,28 @@ function createEmptySelections(): MealSelections {
   };
 }
 
+function getSelectionsFromSource(
+  source: MealDraftSource | null | undefined,
+  kind: SelectableMealSectionKey,
+): MealSelection[] {
+  return (
+    source?.items
+      .filter((entry) => entry.kind === kind)
+      .map((entry) => ({
+        foodId: entry.foodId,
+        grams: entry.grams,
+      })) ?? []
+  );
+}
+
 export function useMealBuilder({
   open,
   date,
   mealsForDate,
   meal,
+  template,
   allMeals,
+  foodGramsById,
   onSave,
   onOpenChange,
 }: UseMealBuilderParams) {
@@ -89,18 +112,20 @@ export function useMealBuilder({
       return;
     }
 
+    const source = meal ?? template;
+
     setSelections({
-      protein: getSelectionsFromMeal(meal, "protein"),
-      vegetable: getSelectionsFromMeal(meal, "vegetable"),
-      fruit: getSelectionsFromMeal(meal, "fruit"),
-      condiment: getSelectionsFromMeal(meal, "condiment"),
+      protein: getSelectionsFromSource(source, "protein"),
+      vegetable: getSelectionsFromSource(source, "vegetable"),
+      fruit: getSelectionsFromSource(source, "fruit"),
+      condiment: getSelectionsFromSource(source, "condiment"),
     });
-    setSupplements(getMealSupplements(meal));
-    setDraftName(meal?.customName ?? "");
+    setSupplements(meal ? getMealSupplements(meal) : createEmptyMealSupplements());
+    setDraftName(source?.customName ?? "");
     setActiveSection("protein");
     setIsSaving(false);
     setAmountTarget(null);
-  }, [meal, open]);
+  }, [meal, open, template]);
 
   const previewMeal = useMemo(() => {
     const hasAnySelection = Object.values(selections).some(
@@ -177,13 +202,23 @@ export function useMealBuilder({
     }));
   }
 
+  function getDefaultGrams(kind: SelectableMealSectionKey, foodId: string) {
+    const rememberedGrams = foodGramsById[foodId];
+
+    if (rememberedGrams > 0) {
+      return rememberedGrams;
+    }
+
+    return DEFAULT_MEAL_GRAMS[kind];
+  }
+
   function openAmountSheet(kind: SelectableMealSectionKey, foodId: string) {
     const existingSelection = findMealSelection(selections[kind], foodId);
 
     setAmountTarget({
       kind,
       foodId,
-      initialGrams: existingSelection?.grams ?? DEFAULT_MEAL_GRAMS[kind],
+      initialGrams: existingSelection?.grams ?? getDefaultGrams(kind, foodId),
     });
   }
 
@@ -192,7 +227,7 @@ export function useMealBuilder({
 
     if (!existingSelection) {
       updateSelections(kind, (current) =>
-        addMealSelection(current, foodId, DEFAULT_MEAL_GRAMS[kind]),
+        addMealSelection(current, foodId, getDefaultGrams(kind, foodId)),
       );
       return;
     }
@@ -263,6 +298,19 @@ export function useMealBuilder({
     }));
   }
 
+  function applyMealDraft(sourceMeal: MealDraftSource) {
+    setSelections({
+      protein: getSelectionsFromSource(sourceMeal, "protein"),
+      vegetable: getSelectionsFromSource(sourceMeal, "vegetable"),
+      fruit: getSelectionsFromSource(sourceMeal, "fruit"),
+      condiment: getSelectionsFromSource(sourceMeal, "condiment"),
+    });
+    setSupplements(createEmptyMealSupplements());
+    setDraftName(sourceMeal.customName ?? "");
+    setActiveSection("protein");
+    setAmountTarget(null);
+  }
+
   async function handleSave() {
     if (!previewMeal || isSaving) {
       return;
@@ -303,5 +351,6 @@ export function useMealBuilder({
     handleSelectFood,
     openAmountSheet,
     toggleSupplement,
+    applyMealDraft,
   };
 }

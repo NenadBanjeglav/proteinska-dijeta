@@ -1,5 +1,6 @@
 import { FOOD_DB } from "@/src/constants/food-db";
 import { MEAL_SUPPLEMENT_DEFINITIONS } from "@/src/constants/protocol";
+import { roundTo } from "@/src/lib/units";
 import type {
   FoodBasis,
   FoodItem,
@@ -138,7 +139,7 @@ export function buildMealSelectionItems(selections: MealSelection[]) {
 }
 
 export function sumLoggedMealItems(items: LoggedMealItem[]) {
-  return items.reduce(
+  const totals = items.reduce(
     (totals, item) => ({
       proteinG: totals.proteinG + item.proteinG,
       carbsG: totals.carbsG + item.carbsG,
@@ -147,6 +148,13 @@ export function sumLoggedMealItems(items: LoggedMealItem[]) {
     }),
     { proteinG: 0, carbsG: 0, fatG: 0, calories: 0 },
   );
+
+  return {
+    proteinG: roundTo(totals.proteinG, 1),
+    carbsG: roundTo(totals.carbsG, 1),
+    fatG: roundTo(totals.fatG, 1),
+    calories: Math.round(totals.calories),
+  };
 }
 
 export function normalizeMealName(value: string) {

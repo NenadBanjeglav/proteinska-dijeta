@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 
 import { Card } from "@/src/components/ui/card";
 import { SUPPLEMENT_CHECKLIST } from "@/src/constants/protocol";
+import { formatKcal, formatMacroGrams } from "@/src/lib/units";
 import type { LoggedMeal } from "@/src/types/app";
 
 type MealBuilderSummaryStepProps = {
@@ -39,9 +40,12 @@ export function MealBuilderSummaryStep({
               <Text className="text-sm text-muted">{item.grams}g</Text>
             </View>
             <View className="items-end gap-1">
-              <Text className="text-base font-bold text-text">{item.proteinG}g</Text>
+              <Text className="text-base font-bold text-text">
+                {formatMacroGrams(item.proteinG)}g
+              </Text>
               <Text className="text-sm text-muted">
-                UH {item.carbsG}g / M {item.fatG}g / {item.calories} kcal
+                UH {formatMacroGrams(item.carbsG)}g / M{" "}
+                {formatMacroGrams(item.fatG)}g / {formatKcal(item.calories)} kcal
               </Text>
             </View>
           </View>
@@ -55,11 +59,12 @@ export function MealBuilderSummaryStep({
           <Text className="text-lg font-bold text-text">{previewMeal?.name ?? "Obrok"}</Text>
           <View className="items-end gap-1">
             <Text className="text-2xl font-black text-text">
-              {previewMeal?.proteinG ?? 0}g
+              {formatMacroGrams(previewMeal?.proteinG)}g
             </Text>
             <Text className="text-sm text-muted">
-              UH {previewMeal?.carbsG ?? 0}g / M {previewMeal?.fatG ?? 0}g /{" "}
-              {previewMeal?.calories ?? 0} kcal
+              UH {formatMacroGrams(previewMeal?.carbsG)}g / M{" "}
+              {formatMacroGrams(previewMeal?.fatG)}g /{" "}
+              {formatKcal(previewMeal?.calories)} kcal
             </Text>
           </View>
         </View>

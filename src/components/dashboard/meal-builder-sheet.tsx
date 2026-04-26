@@ -1,22 +1,26 @@
-import { Text, TextInput, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Text, View } from "react-native";
 
 import { FoodAmountSheet } from "@/src/components/dashboard/food-amount-sheet";
+import { FoodSearchPanel } from "@/src/components/dashboard/meal-logger/food-search-panel";
+import { MealNameControl } from "@/src/components/dashboard/meal-logger/meal-name-control";
+import { SelectedFoodsSection } from "@/src/components/dashboard/meal-logger/selected-foods-section";
+import { SupplementControl } from "@/src/components/dashboard/meal-logger/supplement-control";
 import {
-  MEAL_SECTION_OPTIONS,
-  MealBuilderFoodSection,
-  MealBuilderSupplementsSection,
-  MealSectionTabs,
-} from "@/src/components/dashboard/meal-builder-sections";
+  ALL_FOODS,
+  PROTEIN_FOODS,
+  buildRecentMealChoices,
+  buildSelectedRows,
+  getFoodsFromIds,
+  matchesFoodQuery,
+} from "@/src/components/dashboard/meal-logger/utils";
 import { BottomSheet } from "@/src/components/ui/bottom-sheet";
-import { Card } from "@/src/components/ui/card";
 import { PrimaryButton } from "@/src/components/ui/primary-button";
-import {
-  DEFAULT_MEAL_GRAMS,
-  useMealBuilder,
-} from "@/src/hooks/use-meal-builder";
-import { getFoodsByKind } from "@/src/lib/meals";
+import { useMealBuilder } from "@/src/hooks/use-meal-builder";
+import { formatKcal, formatMacroGrams } from "@/src/lib/units";
 import { usePsmfStore } from "@/src/store/psmf-store";
-import type { LoggedMeal } from "@/src/types/app";
+import type { FoodItem, LoggedMeal, MealTemplate } from "@/src/types/app";
+import type { FoodFilterKey } from "@/src/components/dashboard/meal-logger/types";
 
 type MealBuilderSheetProps = {
   open: boolean;
@@ -24,13 +28,9 @@ type MealBuilderSheetProps = {
   date: string;
   mealsForDate: LoggedMeal[];
   meal?: LoggedMeal | null;
+  template?: MealTemplate | null;
   onSave: (meal: LoggedMeal) => Promise<void>;
 };
-
-const PROTEIN_FOODS = getFoodsByKind("protein");
-const VEGETABLE_FOODS = getFoodsByKind("vegetable");
-const FRUIT_FOODS = getFoodsByKind("fruit");
-const CONDIMENT_FOODS = getFoodsByKind("condiment");
 
 export function MealBuilderSheet({
   open,
@@ -38,27 +38,30 @@ export function MealBuilderSheet({
   date,
   mealsForDate,
   meal = null,
+  template = null,
   onSave,
 }: MealBuilderSheetProps) {
   const allMeals = usePsmfStore((store) => store.data.meals);
+  const mealTemplates = usePsmfStore((store) => store.data.mealTemplates);
   const favoriteFoodIds = usePsmfStore((store) => store.data.favoriteFoodIds);
+  const foodGramsById = usePsmfStore((store) => store.data.foodGramsById);
   const toggleFavoriteFood = usePsmfStore((store) => store.toggleFavoriteFood);
+  const [query, setQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<FoodFilterKey>("all");
+  const [nameEditorOpen, setNameEditorOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [supplementsOpen, setSupplementsOpen] = useState(false);
   const {
-    activeSection,
     amountFood,
     amountTarget,
     availableSupplementDefinitions,
     canSave,
-    clearSelections,
     customName,
     draftName,
     isSaving,
     previewMeal,
     recentFoodIdsByKind,
-    sectionCounts,
     selectionItems,
-    selections,
-    setActiveSection,
     setAmountTarget,
     setDraftName,
     supplements,
@@ -69,155 +72,114 @@ export function MealBuilderSheet({
     handleSelectFood,
     openAmountSheet,
     toggleSupplement,
+    applyMealDraft,
   } = useMealBuilder({
     open,
     date,
     mealsForDate,
     meal,
+    template,
     allMeals,
+    foodGramsById,
     onSave,
     onOpenChange,
   });
 
-  const activeSectionConfig = MEAL_SECTION_OPTIONS.find(
-    (option) => option.key === activeSection,
-  )!;
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
 
-  function handleToggleFavorite(foodId: string) {
-    void toggleFavoriteFood(foodId);
+    setQuery("");
+    setActiveFilter("all");
+    setNameEditorOpen((meal?.customName ?? template?.customName) ? true : false);
+    setSearchFocused(false);
+    setSupplementsOpen(false);
+  }, [meal?.customName, open, template?.customName]);
+
+  const foodById = useMemo(
+    () => new Map(ALL_FOODS.map((food) => [food.id, food])),
+    [],
+  );
+  const favoriteIdSet = useMemo(() => new Set(favoriteFoodIds), [favoriteFoodIds]);
+  const selectedRows = useMemo(
+    () => buildSelectedRows(selectionItems, previewMeal),
+    [previewMeal, selectionItems],
+  );
+  const selectedFoodIds = useMemo(
+    () => new Set(selectedRows.map((item) => item.foodId)),
+    [selectedRows],
+  );
+  const recentFoodIds = useMemo(
+    () => [
+      ...recentFoodIdsByKind.protein,
+      ...recentFoodIdsByKind.vegetable,
+      ...recentFoodIdsByKind.fruit,
+      ...recentFoodIdsByKind.condiment,
+    ],
+    [recentFoodIdsByKind],
+  );
+  const favoriteFoods = useMemo(
+    () => getFoodsFromIds(favoriteFoodIds, foodById).slice(0, 8),
+    [favoriteFoodIds, foodById],
+  );
+  const recentFoods = useMemo(
+    () =>
+      getFoodsFromIds(recentFoodIds, foodById)
+        .filter((food) => !favoriteIdSet.has(food.id))
+        .slice(0, 8),
+    [favoriteIdSet, foodById, recentFoodIds],
+  );
+  const suggestedFoods = useMemo(
+    () =>
+      PROTEIN_FOODS.filter((food) => !favoriteIdSet.has(food.id))
+        .slice(0, 10),
+    [favoriteIdSet],
+  );
+  const recentMealChoices = useMemo(
+    () => buildRecentMealChoices(allMeals, meal?.id),
+    [allMeals, meal?.id],
+  );
+  const resultFoods = useMemo(() => {
+    const hasQuery = query.trim().length > 0;
+    const shouldShowFilteredList = hasQuery || activeFilter !== "all";
+
+    if (!shouldShowFilteredList) {
+      return [];
+    }
+
+    return ALL_FOODS.filter((food) => {
+      if (activeFilter !== "all" && food.kind !== activeFilter) {
+        return false;
+      }
+
+      return matchesFoodQuery(food, query);
+    });
+  }, [activeFilter, query]);
+  const hasQuery = query.trim().length > 0;
+  const showQuickRows = !hasQuery && activeFilter === "all";
+
+  function selectFood(food: FoodItem) {
+    handleSelectFood(food.kind, food.id);
   }
 
-  function renderActiveSection() {
-    if (activeSection === "protein") {
-      return (
-        <MealBuilderFoodSection
-          defaultGrams={DEFAULT_MEAL_GRAMS.protein}
-          description={activeSectionConfig.description}
-          favoriteFoodIds={favoriteFoodIds}
-          foods={PROTEIN_FOODS}
-          onAdjustAmount={(foodId, delta) =>
-            adjustSelectionAmount("protein", foodId, delta)
-          }
-          onEditAmount={(foodId) => openAmountSheet("protein", foodId)}
-          onRemove={(foodId) => handleRemoveSelection("protein", foodId)}
-          onSelect={(foodId) => handleSelectFood("protein", foodId)}
-          onToggleFavorite={handleToggleFavorite}
-          recentFoodIds={recentFoodIdsByKind.protein}
-          selectedFoodIds={selections.protein.map((selection) => selection.foodId)}
-          selectedTitle="Izabrani proteini"
-          selectionItems={selectionItems.protein}
-          stepSize={25}
-          title={activeSectionConfig.title}
-        />
-      );
-    }
-
-    if (activeSection === "vegetable") {
-      return (
-        <MealBuilderFoodSection
-          defaultGrams={DEFAULT_MEAL_GRAMS.vegetable}
-          description={activeSectionConfig.description}
-          favoriteFoodIds={favoriteFoodIds}
-          foods={VEGETABLE_FOODS}
-          onAdjustAmount={(foodId, delta) =>
-            adjustSelectionAmount("vegetable", foodId, delta)
-          }
-          onEditAmount={(foodId) => openAmountSheet("vegetable", foodId)}
-          onOptionalChoicePress={() => clearSelections("vegetable")}
-          onRemove={(foodId) => handleRemoveSelection("vegetable", foodId)}
-          onSelect={(foodId) => handleSelectFood("vegetable", foodId)}
-          onToggleFavorite={handleToggleFavorite}
-          optionalChoiceLabel="Bez povrca u ovom obroku"
-          optionalChoiceSelected={selections.vegetable.length === 0}
-          recentFoodIds={recentFoodIdsByKind.vegetable}
-          selectedFoodIds={selections.vegetable.map((selection) => selection.foodId)}
-          selectedTitle="Izabrano povrce"
-          selectionItems={selectionItems.vegetable}
-          stepSize={25}
-          title={activeSectionConfig.title}
-        />
-      );
-    }
-
-    if (activeSection === "fruit") {
-      return (
-        <MealBuilderFoodSection
-          defaultGrams={DEFAULT_MEAL_GRAMS.fruit}
-          description={activeSectionConfig.description}
-          favoriteFoodIds={favoriteFoodIds}
-          foods={FRUIT_FOODS}
-          onAdjustAmount={(foodId, delta) =>
-            adjustSelectionAmount("fruit", foodId, delta)
-          }
-          onEditAmount={(foodId) => openAmountSheet("fruit", foodId)}
-          onOptionalChoicePress={() => clearSelections("fruit")}
-          onRemove={(foodId) => handleRemoveSelection("fruit", foodId)}
-          onSelect={(foodId) => handleSelectFood("fruit", foodId)}
-          onToggleFavorite={handleToggleFavorite}
-          optionalChoiceLabel="Bez voca u ovom obroku"
-          optionalChoiceSelected={selections.fruit.length === 0}
-          recentFoodIds={recentFoodIdsByKind.fruit}
-          selectedFoodIds={selections.fruit.map((selection) => selection.foodId)}
-          selectedTitle="Izabrano voce"
-          selectionItems={selectionItems.fruit}
-          stepSize={25}
-          title={activeSectionConfig.title}
-        />
-      );
-    }
-
-    if (activeSection === "supplements") {
-      return (
-        <MealBuilderSupplementsSection
-          availableKeys={availableSupplementDefinitions.map(
-            (definition) => definition.key,
-          )}
-          description={activeSectionConfig.description}
-          onToggle={toggleSupplement}
-          supplements={supplements}
-          title={activeSectionConfig.title}
-        />
-      );
-    }
-
-    return (
-      <MealBuilderFoodSection
-        defaultGrams={DEFAULT_MEAL_GRAMS.condiment}
-        description={activeSectionConfig.description}
-        favoriteFoodIds={favoriteFoodIds}
-        foods={CONDIMENT_FOODS}
-        onAdjustAmount={(foodId, delta) =>
-          adjustSelectionAmount("condiment", foodId, delta)
-        }
-        onEditAmount={(foodId) => openAmountSheet("condiment", foodId)}
-        onOptionalChoicePress={() => clearSelections("condiment")}
-        onRemove={(foodId) => handleRemoveSelection("condiment", foodId)}
-        onSelect={(foodId) => handleSelectFood("condiment", foodId)}
-        onToggleFavorite={handleToggleFavorite}
-        optionalChoiceLabel="Bez dodataka u ovom obroku"
-        optionalChoiceSelected={selections.condiment.length === 0}
-        recentFoodIds={recentFoodIdsByKind.condiment}
-        selectedFoodIds={selections.condiment.map((selection) => selection.foodId)}
-        selectedTitle="Izabrani dodaci"
-        selectionItems={selectionItems.condiment}
-        stepSize={5}
-        title={activeSectionConfig.title}
-      />
-    );
+  function toggleFavorite(foodId: string) {
+    void toggleFavoriteFood(foodId);
   }
 
   return (
     <>
       <BottomSheet
         footer={
+          searchFocused ? undefined : (
           <View className="gap-3">
             <View className="flex-row items-end justify-between gap-3">
-              <View className="gap-1">
+              <View className="flex-1 gap-1">
                 <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
-                  Tekuci zbir
+                  Obrok
                 </Text>
-                <Text className="text-sm text-muted">
-                  {previewMeal?.name ?? "Obrok u pripremi"}
+                <Text className="text-sm text-muted" numberOfLines={1}>
+                  {previewMeal?.name ?? "Nije uneto"}
                 </Text>
               </View>
               <View className="items-end gap-1">
@@ -225,11 +187,10 @@ export function MealBuilderSheet({
                   className="text-2xl font-black text-text"
                   style={{ fontVariant: ["tabular-nums"] }}
                 >
-                  {previewMeal?.proteinG ?? 0} g
+                  {formatMacroGrams(previewMeal?.proteinG)} g
                 </Text>
                 <Text className="text-sm text-muted">
-                  UH {previewMeal?.carbsG ?? 0} g / M {previewMeal?.fatG ?? 0} g /{" "}
-                  {previewMeal?.calories ?? 0} kcal
+                  {formatKcal(previewMeal?.calories)} kcal
                 </Text>
               </View>
             </View>
@@ -251,39 +212,59 @@ export function MealBuilderSheet({
               variant="ghost"
             />
           </View>
+          )
         }
         onOpenChange={onOpenChange}
         open={open}
-        stickyHeaderIndices={[1]}
         title={meal ? "Izmeni obrok" : "Dodaj obrok"}
       >
-        <Card className="mb-5 gap-3">
-          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-muted">
-            Naziv obroka nije obavezan
-          </Text>
-          <TextInput
-            className="rounded-3xl bg-surface-soft px-5 py-4 text-lg font-semibold text-text"
-            onChangeText={setDraftName}
-            placeholder="Ostavi prazno za automatski naziv"
-            placeholderTextColor="#6F7A90"
-            value={draftName}
-          />
-          <Text className="text-sm leading-6 text-muted">
-            {customName
-              ? `Koristicemo naziv "${customName}".`
-              : "Ako ostavis prazno, naziv pravimo iz izabranih sastojaka."}
-          </Text>
-        </Card>
+        <View className="gap-5">
+          <FoodSearchPanel
+            activeFilter={activeFilter}
+            favoriteFoods={favoriteFoods}
+            favoriteIdSet={favoriteIdSet}
+            hasQuery={hasQuery}
+            onSearchBlur={() => setSearchFocused(false)}
+            onSearchFocus={() => setSearchFocused(true)}
+            onSelectFood={selectFood}
+            onSelectMeal={applyMealDraft}
+            onSelectTemplate={applyMealDraft}
+            onToggleFavorite={toggleFavorite}
+            query={query}
+            recentFoods={recentFoods}
+            recentMealChoices={recentMealChoices}
+            resultFoods={resultFoods}
+            selectedFoodIds={selectedFoodIds}
+            setActiveFilter={setActiveFilter}
+            setQuery={setQuery}
+            showQuickRows={showQuickRows}
+            suggestedFoods={suggestedFoods}
+            templateChoices={mealTemplates}
+          >
+            <SelectedFoodsSection
+              items={selectedRows}
+              onAdjustAmount={adjustSelectionAmount}
+              onEditAmount={openAmountSheet}
+              onRemove={handleRemoveSelection}
+            />
+          </FoodSearchPanel>
 
-        <View className="-mx-6 mb-5 border-y border-border bg-surface px-6 py-3">
-          <MealSectionTabs
-            counts={sectionCounts}
-            onChange={setActiveSection}
-            value={activeSection}
+          <MealNameControl
+            customName={customName}
+            draftName={draftName}
+            open={nameEditorOpen}
+            setDraftName={setDraftName}
+            setOpen={setNameEditorOpen}
+          />
+
+          <SupplementControl
+            definitions={availableSupplementDefinitions}
+            onToggle={toggleSupplement}
+            open={supplementsOpen}
+            setOpen={setSupplementsOpen}
+            supplements={supplements}
           />
         </View>
-
-        {renderActiveSection()}
       </BottomSheet>
 
       <FoodAmountSheet

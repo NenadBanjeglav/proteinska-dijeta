@@ -3,12 +3,15 @@ import { Pressable, Text, View } from "react-native";
 
 import { Card } from "@/src/components/ui/card";
 import { triggerHaptic } from "@/src/lib/haptics";
+import { formatKcal, formatMacroGrams } from "@/src/lib/units";
 import type { LoggedMeal } from "@/src/types/app";
 
 type MealCardProps = {
   meal: LoggedMeal;
+  savedAsTemplate: boolean;
   onEdit: (meal: LoggedMeal) => void;
   onDelete: (meal: LoggedMeal) => void;
+  onToggleTemplate: (meal: LoggedMeal) => void;
 };
 
 function buildMealSummary(meal: LoggedMeal) {
@@ -22,7 +25,13 @@ function buildMealSummary(meal: LoggedMeal) {
   return `${preview} + još ${labels.length - 2}`;
 }
 
-export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
+export function MealCard({
+  meal,
+  savedAsTemplate,
+  onEdit,
+  onDelete,
+  onToggleTemplate,
+}: MealCardProps) {
   return (
     <Card className="gap-4 px-4 py-4">
       <View className="flex-row items-start gap-4">
@@ -44,11 +53,11 @@ export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
             className="text-3xl font-black text-text"
             style={{ fontVariant: ["tabular-nums"] }}
           >
-            {meal.proteinG} g
+            {formatMacroGrams(meal.proteinG)} g
           </Text>
-          <Text className="text-sm text-muted">{meal.calories} kcal</Text>
+          <Text className="text-sm text-muted">{formatKcal(meal.calories)} kcal</Text>
           <Text className="text-xs text-muted">
-            UH {meal.carbsG ?? 0} g / M {meal.fatG ?? 0} g
+            UH {formatMacroGrams(meal.carbsG)} g / M {formatMacroGrams(meal.fatG)} g
           </Text>
         </View>
       </View>
@@ -56,7 +65,25 @@ export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
       <View className="flex-row justify-end gap-2 border-t border-border/80 pt-3">
         <Pressable
           accessibilityRole="button"
-          className="min-h-[44px] min-w-[112px] flex-row items-center justify-center gap-2 rounded-full border border-border bg-surface-soft px-4 py-3"
+          accessibilityState={{ selected: savedAsTemplate }}
+          className="min-h-[44px] min-w-[104px] flex-row items-center justify-center gap-2 rounded-full border border-border bg-surface-soft px-4 py-3"
+          onPress={() => {
+            triggerHaptic("selection");
+            onToggleTemplate(meal);
+          }}
+        >
+          <Ionicons
+            color={savedAsTemplate ? "#FDB022" : "#CBD5E1"}
+            name={savedAsTemplate ? "star" : "star-outline"}
+            size={16}
+          />
+          <Text className="text-sm font-semibold text-muted-strong">
+            {savedAsTemplate ? "Šablon" : "Sačuvaj"}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          className="min-h-[44px] min-w-[104px] flex-row items-center justify-center gap-2 rounded-full border border-border bg-surface-soft px-4 py-3"
           onPress={() => {
             triggerHaptic("selection");
             onEdit(meal);
@@ -67,7 +94,7 @@ export function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          className="min-h-[44px] min-w-[112px] flex-row items-center justify-center gap-2 rounded-full border border-danger/35 bg-danger/10 px-4 py-3"
+          className="min-h-[44px] min-w-[104px] flex-row items-center justify-center gap-2 rounded-full border border-danger/35 bg-danger/10 px-4 py-3"
           onPress={() => {
             triggerHaptic("selection");
             onDelete(meal);

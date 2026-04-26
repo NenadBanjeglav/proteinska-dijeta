@@ -45,6 +45,19 @@ export type LoggedMeal = {
   date: string;
 };
 
+export type MealTemplate = {
+  id: string;
+  name: string;
+  customName: string | null;
+  items: LoggedMealItem[];
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  calories: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PSMFStore = {
   userName: string | null;
   startDate: string | null;
@@ -58,7 +71,9 @@ export type PSMFStore = {
   goalTotalDays: number | null;
   weightHistory: WeightEntry[];
   meals: LoggedMeal[];
+  mealTemplates: MealTemplate[];
   favoriteFoodIds: string[];
+  foodGramsById: Record<string, number>;
   waterGlassesByDate: Record<string, number>;
 };
 
@@ -125,6 +140,9 @@ export type PSMFAppStore = {
   saveWeightEntry: (kg: number, date: string) => Promise<void>;
   saveMeal: (meal: LoggedMeal) => Promise<void>;
   deleteMeal: (mealId: string) => Promise<void>;
+  saveMealTemplate: (meal: LoggedMeal) => Promise<void>;
+  deleteMealTemplate: (templateId: string) => Promise<void>;
+  renameMealTemplate: (templateId: string, name: string) => Promise<void>;
   toggleFavoriteFood: (foodId: string) => Promise<void>;
   setWaterGlasses: (date: string, count: number) => Promise<void>;
 };

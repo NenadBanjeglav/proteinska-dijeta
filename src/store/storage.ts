@@ -3,7 +3,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   createEmptyMealSupplements,
   getMealSupplements,
+  normalizeMealName,
 } from "@/src/lib/meals";
+import { getMealTemplateSignature } from "@/src/lib/meal-templates";
 import { sortWeightHistory } from "@/src/lib/date";
 import type {
   Activity,
@@ -11,6 +13,7 @@ import type {
   LoggedMeal,
   LoggedMealItemKind,
   LoggedMealItem,
+  MealTemplate,
   MealSupplements,
   OnboardingProfile,
   PlanSettingsUpdate,
@@ -23,6 +26,7 @@ export const STORAGE_KEY = "psmf_store";
 const GENDERS = new Set<Gender>(["male", "female"]);
 const ACTIVITIES = new Set<Activity>(["inactive", "aerobics", "weights"]);
 const MEAL_KINDS = new Set(["protein", "vegetable", "fruit", "condiment"]);
+const MAX_REMEMBERED_FOOD_GRAMS = 2000;
 
 export const DEFAULT_STORE: PSMFStore = {
   userName: null,
@@ -37,7 +41,9 @@ export const DEFAULT_STORE: PSMFStore = {
   goalTotalDays: null,
   weightHistory: [],
   meals: [],
+  mealTemplates: [],
   favoriteFoodIds: [],
+  foodGramsById: {},
   waterGlassesByDate: {},
 };
 
@@ -46,7 +52,9 @@ function cloneDefaultStore(): PSMFStore {
     ...DEFAULT_STORE,
     weightHistory: [],
     meals: [],
+    mealTemplates: [],
     favoriteFoodIds: [],
+    foodGramsById: {},
     waterGlassesByDate: {},
   };
 }
@@ -88,6 +96,10 @@ function ensureStartWeightEntry(
       kg: startingWeightKg,
     },
   ]);
+}
+
+function createId(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function parseWeightEntry(value: unknown): WeightEntry | null {
@@ -176,6 +188,87 @@ function parseMeal(value: unknown): LoggedMeal | null {
   };
 }
 
+function parseMealTemplate(value: unknown): MealTemplate | null {
+  if (!isRecord(value) || !isString(value.id) || !isString(value.name)) {
+    return null;
+  }
+
+  const items = Array.isArray(value.items)
+    ? value.items.map(parseMealItem).filter(isDefined)
+    : [];
+
+  if (!items.length || !isNumber(value.proteinG) || !isNumber(value.calories)) {
+    return null;
+  }
+
+  const itemTotals = items.reduce(
+    (totals, item) => ({
+      carbsG: totals.carbsG + item.carbsG,
+      fatG: totals.fatG + item.fatG,
+    }),
+    { carbsG: 0, fatG: 0 },
+  );
+
+  return {
+    id: value.id,
+    name: value.name,
+    customName: isString(value.customName) ? value.customName : null,
+    items,
+    proteinG: value.proteinG,
+    carbsG: isNumber(value.carbsG) ? value.carbsG : itemTotals.carbsG,
+    fatG: isNumber(value.fatG) ? value.fatG : itemTotals.fatG,
+    calories: value.calories,
+    createdAt: isString(value.createdAt) ? value.createdAt : "",
+    updatedAt: isString(value.updatedAt) ? value.updatedAt : "",
+  };
+}
+
+function sanitizeFoodGramsById(value: unknown) {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  return Object.entries(value).reduce<Record<string, number>>(
+    (accumulator, [foodId, grams]) => {
+      if (!isNumber(grams) || grams <= 0 || grams > MAX_REMEMBERED_FOOD_GRAMS) {
+        return accumulator;
+      }
+
+      accumulator[foodId] = Math.round(grams);
+      return accumulator;
+    },
+    {},
+  );
+}
+
+function getFoodGramsFromMeal(meal: LoggedMeal) {
+  return meal.items.reduce<Record<string, number>>((accumulator, item) => {
+    if (item.grams > 0 && item.grams <= MAX_REMEMBERED_FOOD_GRAMS) {
+      accumulator[item.foodId] = Math.round(item.grams);
+    }
+
+    return accumulator;
+  }, {});
+}
+
+function getFoodGramsFromMeals(meals: LoggedMeal[]) {
+  const sortedMeals = [...meals].sort((left, right) => {
+    if (left.date !== right.date) {
+      return left.date.localeCompare(right.date);
+    }
+
+    return left.id.localeCompare(right.id);
+  });
+
+  return sortedMeals.reduce<Record<string, number>>(
+    (accumulator, meal) => ({
+      ...accumulator,
+      ...getFoodGramsFromMeal(meal),
+    }),
+    {},
+  );
+}
+
 function sanitizeStore(value: unknown): PSMFStore {
   const fallback = cloneDefaultStore();
   if (!isRecord(value)) {
@@ -187,6 +280,9 @@ function sanitizeStore(value: unknown): PSMFStore {
     : [];
   const meals = Array.isArray(value.meals)
     ? value.meals.map(parseMeal).filter(isDefined)
+    : [];
+  const mealTemplates = Array.isArray(value.mealTemplates)
+    ? value.mealTemplates.map(parseMealTemplate).filter(isDefined)
     : [];
   const startDate = isString(value.startDate) ? value.startDate : null;
   const startingWeightKg = isNumber(value.startingWeightKg)
@@ -206,6 +302,10 @@ function sanitizeStore(value: unknown): PSMFStore {
   const favoriteFoodIds = Array.isArray(value.favoriteFoodIds)
     ? value.favoriteFoodIds.filter(isString)
     : [];
+  const persistedFoodGramsById = sanitizeFoodGramsById(value.foodGramsById);
+  const foodGramsById = Object.keys(persistedFoodGramsById).length
+    ? persistedFoodGramsById
+    : getFoodGramsFromMeals(meals);
 
   return {
     ...fallback,
@@ -223,7 +323,9 @@ function sanitizeStore(value: unknown): PSMFStore {
     goalTotalDays: isNumber(value.goalTotalDays) ? value.goalTotalDays : null,
     weightHistory: ensureStartWeightEntry(weightHistory, startDate, startingWeightKg),
     meals,
+    mealTemplates,
     favoriteFoodIds,
+    foodGramsById,
     waterGlassesByDate,
   };
 }
@@ -342,8 +444,72 @@ export async function saveMeal(meal: LoggedMeal) {
     return {
       ...store,
       meals: [...meals, nextMeal].sort((left, right) => left.date.localeCompare(right.date)),
+      foodGramsById: {
+        ...store.foodGramsById,
+        ...getFoodGramsFromMeal(nextMeal),
+      },
     };
   });
+}
+
+export async function saveMealTemplate(meal: LoggedMeal) {
+  return updateStore((store) => {
+    const now = new Date().toISOString();
+    const signature = getMealTemplateSignature(meal);
+    const existingTemplate = store.mealTemplates.find(
+      (template) => getMealTemplateSignature(template) === signature,
+    );
+    const nextTemplate: MealTemplate = {
+      id: existingTemplate?.id ?? createId("meal-template"),
+      name: meal.name,
+      customName: meal.customName,
+      items: meal.items,
+      proteinG: meal.proteinG,
+      carbsG: meal.carbsG,
+      fatG: meal.fatG,
+      calories: meal.calories,
+      createdAt: existingTemplate?.createdAt || now,
+      updatedAt: now,
+    };
+    const rest = store.mealTemplates.filter(
+      (template) => template.id !== nextTemplate.id,
+    );
+
+    return {
+      ...store,
+      mealTemplates: [nextTemplate, ...rest],
+    };
+  });
+}
+
+export async function deleteMealTemplate(templateId: string) {
+  return updateStore((store) => ({
+    ...store,
+    mealTemplates: store.mealTemplates.filter(
+      (template) => template.id !== templateId,
+    ),
+  }));
+}
+
+export async function renameMealTemplate(templateId: string, name: string) {
+  const nextName = normalizeMealName(name);
+  if (!nextName) {
+    return getStore();
+  }
+
+  return updateStore((store) => ({
+    ...store,
+    mealTemplates: store.mealTemplates.map((template) =>
+      template.id === templateId
+        ? {
+            ...template,
+            name: nextName,
+            customName: nextName,
+            updatedAt: new Date().toISOString(),
+          }
+        : template,
+    ),
+  }));
 }
 
 export async function deleteMeal(mealId: string) {
